@@ -1,5 +1,19 @@
 import Link from "next/link";
 import StatsCounter from "@/components/stats-counter";
+import { cookies } from "next/headers";
+import { verifyToken } from "@/lib/auth/jwt";
+
+async function isLoggedIn() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+  if (!token) return false;
+  try {
+    await verifyToken(token);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 const features = [
   {
@@ -51,7 +65,9 @@ const steps = [
 ];
 
 
-export default function HomePage() {
+export default async function HomePage() {
+  const loggedIn = await isLoggedIn();
+
   return (
     <div className="flex flex-col min-h-full bg-carbon">
       {/* Navbar */}
@@ -62,15 +78,26 @@ export default function HomePage() {
             <span className="text-off-white">VAULT</span>
           </span>
           <nav className="flex items-center gap-4">
-            <Link href="/login" className="text-sm font-medium text-muted transition-colors hover:text-off-white">
-              Log in
-            </Link>
-            <Link
-              href="/register"
-              className="text-sm font-semibold px-4 py-2 rounded-md bg-red text-off-white transition-colors hover:bg-red-light"
-            >
-              Get Started
-            </Link>
+            {loggedIn ? (
+              <Link
+                href="/dashboard"
+                className="text-sm font-semibold px-4 py-2 rounded-md bg-red text-off-white transition-colors hover:bg-red-light"
+              >
+                Go to Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link href="/login" className="text-sm font-medium text-muted transition-colors hover:text-off-white">
+                  Log in
+                </Link>
+                <Link
+                  href="/register"
+                  className="text-sm font-semibold px-4 py-2 rounded-md bg-red text-off-white transition-colors hover:bg-red-light"
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       </header>

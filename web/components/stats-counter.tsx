@@ -21,7 +21,10 @@ function CountUp({
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    if (!active) return;
+    if (!active) {
+      setCount(0);
+      return;
+    }
 
     const duration = 2000;
     const start = performance.now();
@@ -50,10 +53,7 @@ export default function StatsCounter() {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setActive(true);
-          observer.disconnect();
-        }
+        setActive(entry.isIntersecting);
       },
       { threshold: 0.3 }
     );
