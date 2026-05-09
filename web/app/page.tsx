@@ -128,18 +128,37 @@ export default async function HomePage() {
               for events — all in one place.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/register"
-                className="inline-flex items-center justify-center px-8 py-3 rounded-md font-semibold text-base bg-red text-off-white transition-colors hover:bg-red-light"
-              >
-                Start for Free
-              </Link>
-              <Link
-                href="/tracks"
-                className="inline-flex items-center justify-center px-8 py-3 rounded-md font-semibold text-base bg-card text-off-white border border-card transition-colors hover:border-muted"
-              >
-                Browse Tracks →
-              </Link>
+              {loggedIn ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="inline-flex items-center justify-center px-8 py-3 rounded-md font-semibold text-base bg-red text-off-white transition-colors hover:bg-red-light"
+                  >
+                    Go to Dashboard
+                  </Link>
+                  <Link
+                    href="/laps"
+                    className="inline-flex items-center justify-center px-8 py-3 rounded-md font-semibold text-base bg-card text-off-white border border-card transition-colors hover:border-muted"
+                  >
+                    My Laps →
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/register"
+                    className="inline-flex items-center justify-center px-8 py-3 rounded-md font-semibold text-base bg-red text-off-white transition-colors hover:bg-red-light"
+                  >
+                    Start for Free
+                  </Link>
+                  <Link
+                    href="/tracks"
+                    className="inline-flex items-center justify-center px-8 py-3 rounded-md font-semibold text-base bg-card text-off-white border border-card transition-colors hover:border-muted"
+                  >
+                    Browse Tracks →
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </section>
@@ -198,18 +217,37 @@ export default async function HomePage() {
 
         {/* CTA banner */}
         <section className="max-w-6xl mx-auto px-6 py-24 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
-            Ready to beat your best lap?
-          </h2>
-          <p className="text-base mb-8 text-muted">
-            Join hundreds of drivers already using LapVault on track.
-          </p>
-          <Link
-            href="/register"
-            className="inline-flex items-center justify-center px-10 py-4 rounded-md font-semibold text-base bg-red text-off-white transition-colors hover:bg-red-light"
-          >
-            Create Free Account
-          </Link>
+          {loggedIn ? (
+            <>
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+                Ready to beat your best lap?
+              </h2>
+              <p className="text-base mb-8 text-muted">
+                Head back to your dashboard and keep pushing.
+              </p>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center justify-center px-10 py-4 rounded-md font-semibold text-base bg-red text-off-white transition-colors hover:bg-red-light"
+              >
+                Go to Dashboard
+              </Link>
+            </>
+          ) : (
+            <>
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+                Ready to beat your best lap?
+              </h2>
+              <p className="text-base mb-8 text-muted">
+                Join hundreds of drivers already using LapVault on track.
+              </p>
+              <Link
+                href="/register"
+                className="inline-flex items-center justify-center px-10 py-4 rounded-md font-semibold text-base bg-red text-off-white transition-colors hover:bg-red-light"
+              >
+                Create Free Account
+              </Link>
+            </>
+          )}
         </section>
       </main>
 
@@ -223,8 +261,14 @@ export default async function HomePage() {
           </span>
           <div className="flex gap-6">
             <Link href="/tracks" className="hover:text-off-white transition-colors">Tracks</Link>
-            <Link href="/login" className="hover:text-off-white transition-colors">Log in</Link>
-            <Link href="/register" className="hover:text-off-white transition-colors">Register</Link>
+            {loggedIn ? (
+              <Link href="/dashboard" className="hover:text-off-white transition-colors">Dashboard</Link>
+            ) : (
+              <>
+                <Link href="/login" className="hover:text-off-white transition-colors">Log in</Link>
+                <Link href="/register" className="hover:text-off-white transition-colors">Register</Link>
+              </>
+            )}
           </div>
         </div>
       </footer>

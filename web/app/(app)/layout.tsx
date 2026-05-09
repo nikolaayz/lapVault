@@ -4,6 +4,7 @@ import { verifyToken } from "@/lib/auth/jwt";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import LogoutButton from "./LogoutButton";
 
 async function getUser() {
   const cookieStore = await cookies();
@@ -40,7 +41,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             {user?.role === "admin" && (
               <Link href="/admin" className="text-sm text-blue hover:text-off-white transition-colors">Admin</Link>
             )}
-            <span className="text-sm text-muted border-l border-card pl-6">{user?.name}</span>
+            <div className="flex items-center gap-4 border-l border-card pl-6">
+              <span className="text-sm font-semibold text-off-white">{user?.name}</span>
+              <LogoutButton />
+            </div>
           </nav>
         </div>
       </header>
