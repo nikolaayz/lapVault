@@ -1,0 +1,83 @@
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { laps, cars, tracks } from "@/lib/db/schema";
+import { eq, desc } from "drizzle-orm";
+import { getSession } from "@/lib/auth/session";
+
+export async function GET(req: NextRequest) {
+  const session = await getSession(req);
+  if (!session) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
+  const rows = await db
+    .select({
+      id: laps.id,
+      lapTimeMs: laps.lapTimeMs,
+      sector1Ms: laps.sector1Ms,
+      sector2Ms: laps.sector2Ms,
+      sector3Ms: laps.sector3Ms,
+      conditions: laps.conditions,
+      notes: laps.notes,
+      createdAt: laps.createdAt,
+      carId: cars.id,
+      carMake: cars.make,
+      carModel: cars.model,
+      carYear: cars.year,
+      carClass: cars.class,
+      trackId: tracks.id,
+      trackName: tracks.name,
+      trackCountry: tracks.country,
+      trackLengthKm: tracks.lengthKm,
+    })
+    .from(laps)
+    .innerJoin(cars, eq(laps.carId, cars.id))
+    .innerJoin(tracks, eq(laps.trackId, tracks.id))
+    .where(eq(laps.userId, session.userId))
+    .orderBy(desc(laps.createdAt));
+
+  return NextResponse.json(
+    rows.map((r) => ({
+      id: r.id,
+      lapTimeMs: r.lapTimeMs,
+      sector1Ms: r.sector1Ms,
+      sector2Ms: r.sector2Ms,
+      sector3Ms: r.sector3Ms,
+      conditions: r.conditions,
+      notes: r.notes,
+      createdAt: r.createdAt.toISOString(),
+      car: { id: r.carId, make: r.carMake, model: r.carModel, year: r.carYear, class: r.carClass },
+      track: { id: r.trackId, name: r.trackName, country: r.trackCountry, lengthKm: r.trackLengthKm },
+    }))
+  );
+}
+
+export async function POST(req: NextRequest) {
+  const session = await getSession(req);
+  if (!session) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
+  const { carId, trackId, lapTimeMs, sector1Ms, sector2Ms, sector3Ms, conditions, notes } = await req.json();
+
+  if (!carId || !trackId || !lapTimeMs || !conditions) {
+    return NextResponse.json({ error: "carId, trackId, lapTimeMs, and conditions are required" }, { status: 400 });
+  }
+
+  if (typeof lapTimeMs !== "number" || lapTimeMs <= 0) {
+    return NextResponse.json({ error: "Invalid lap time" }, { status: 400 });
+  }
+
+  const [lap] = await db
+    .insert(laps)
+    .values({
+      userId: session.userId,
+      carId,
+      trackId,
+      lapTimeMs,
+      sector1Ms: sector1Ms ?? null,
+      sector2Ms: sector2Ms ?? null,
+      sector3Ms: sector3Ms ?? null,
+      conditions,
+      notes: notes?.trim() || null,
+    })
+    .returning();
+
+  return NextResponse.json(lap, { status: 201 });
+}
