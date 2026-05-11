@@ -1,8 +1,8 @@
 import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/auth/jwt";
 import { db } from "@/lib/db";
-import { users, laps, cars, tracks } from "@/lib/db/schema";
-import { eq, count, min, desc, and, isNotNull } from "drizzle-orm";
+import { users, laps, cars, tracks, events, eventRegistrations } from "@/lib/db/schema";
+import { eq, count, min, desc, and, isNotNull, gte, asc } from "drizzle-orm";
 import Link from "next/link";
 
 function formatMs(ms: number): string {
@@ -16,7 +16,7 @@ function formatDate(iso: string): string {
 }
 
 async function getDashboardData(userId: number) {
-  const [userRows, totalRows, latestLapRows, recentLapRows] = await Promise.all([
+  const [userRows, totalRows, latestLapRows, recentLapRows, upcomingEventRows] = await Promise.all([
     db.select({ name: users.name }).from(users).where(eq(users.id, userId)).limit(1),
     db.select({ total: count(laps.id) }).from(laps).where(eq(laps.userId, userId)),
     db
@@ -43,6 +43,15 @@ async function getDashboardData(userId: number) {
       .where(eq(laps.userId, userId))
       .orderBy(desc(laps.createdAt))
       .limit(5),
+
+    db
+      .select({ id: events.id, title: events.title, date: events.date, trackName: tracks.name })
+      .from(events)
+      .innerJoin(eventRegistrations, eq(eventRegistrations.eventId, events.id))
+      .innerJoin(tracks, eq(events.trackId, tracks.id))
+      .where(and(eq(eventRegistrations.userId, userId), gte(events.date, new Date())))
+      .orderBy(asc(events.date))
+      .limit(3),
   ]);
 
   let trackName: string | null = null;
@@ -84,6 +93,7 @@ async function getDashboardData(userId: number) {
     bestLapMs,
     possibleBestMs,
     recentLaps: recentLapRows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() })),
+    upcomingEvents: upcomingEventRows.map((r) => ({ ...r, date: r.date.toISOString() })),
   };
 }
 
@@ -97,11 +107,12 @@ export default async function DashboardPage() {
   let bestLapMs: number | null = null;
   let possibleBestMs: number | null = null;
   let recentLaps: { id: number; lapTimeMs: number; conditions: string; createdAt: string; trackName: string; carMake: string; carModel: string; carYear: number }[] = [];
+  let upcomingEvents: { id: number; title: string; date: string; trackName: string }[] = [];
 
   if (token) {
     try {
       const { userId } = await verifyToken(token);
-      ({ userName, totalLaps, trackName, bestLapMs, possibleBestMs, recentLaps } = await getDashboardData(userId));
+      ({ userName, totalLaps, trackName, bestLapMs, possibleBestMs, recentLaps, upcomingEvents } = await getDashboardData(userId));
     } catch {
       // layout handles redirect
     }
@@ -175,12 +186,29 @@ export default async function DashboardPage() {
         </div>
 
         <div className="bg-card rounded-lg p-6">
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted mb-4">Upcoming Events</p>
-          <div className="flex flex-col items-center justify-center py-10 text-center">
-            <p className="text-4xl mb-3">📅</p>
-            <p className="text-sm text-muted">No upcoming events.</p>
-            <p className="text-xs text-muted mt-1">Check back soon for new track days.</p>
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted">Upcoming Events</p>
+            <Link href="/events" className="text-xs text-red hover:underline">View all →</Link>
           </div>
+
+          {upcomingEvents.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <p className="text-4xl mb-3">📅</p>
+              <p className="text-sm text-muted">No upcoming events.</p>
+              <Link href="/events" className="text-xs text-red hover:underline mt-1 inline-block">Browse events →</Link>
+            </div>
+          ) : (
+            <div className="flex flex-col divide-y divide-card">
+              {upcomingEvents.map((event) => (
+                <div key={event.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{event.title}</p>
+                    <p className="text-xs text-muted mt-0.5">{event.trackName} · {formatDate(event.date)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
