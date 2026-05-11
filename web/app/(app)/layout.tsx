@@ -43,7 +43,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <Link href="/admin" className="text-sm text-blue hover:text-off-white transition-colors">Admin</Link>
             )}
             <div className="flex items-center gap-4 border-l border-card pl-6">
-              <span className="text-sm font-semibold text-off-white">{user?.name}</span>
+              <Link href="/profile" className="text-sm font-semibold text-off-white hover:text-red transition-colors">{user?.name}</Link>
               <LogoutButton />
             </div>
           </nav>
