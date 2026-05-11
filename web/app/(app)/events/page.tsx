@@ -78,15 +78,17 @@ export default async function EventsPage() {
   let initialEvents: Event[] = [];
   let userCars: EventCar[] = [];
   let allTracks: EventTrack[] = [];
+  let isAdmin = false;
 
   if (token) {
     try {
-      const { userId } = await verifyToken(token);
+      const { userId, role } = await verifyToken(token);
+      isAdmin = role === "admin";
       ({ initialEvents, userCars, allTracks } = await getPageData(userId));
     } catch {
       // layout handles redirect
     }
   }
 
-  return <EventsClient initialEvents={initialEvents} cars={userCars} tracks={allTracks} />;
+  return <EventsClient initialEvents={initialEvents} cars={userCars} tracks={allTracks} isAdmin={isAdmin} />;
 }
