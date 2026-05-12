@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
   const token = await signToken({ userId: user.id, role: user.role });
 
-  const response = NextResponse.json({ success: true }, { status: 201 });
+  const response = NextResponse.json({ success: true, token }, { status: 201 });
   response.cookies.set("token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
