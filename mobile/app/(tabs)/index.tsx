@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import { apiFetch } from "@/lib/api";
 
 type Lap = {
@@ -79,7 +80,7 @@ export default function DashboardScreen() {
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useFocusEffect(useCallback(() => { void load(); }, [load]));
 
   if (loading) {
     return (
