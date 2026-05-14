@@ -1,19 +1,12 @@
 import { formatDate, formatMs } from "@/lib/formatters";
 import { EditIcon, TrashIcon } from "@/components/ui/icons";
-import type { CarClass } from "@/lib/types";
+import { classBadge } from "@/lib/types";
 import type { Lap, Conditions } from "@/lib/lapUtils";
 
 const conditionsBadge: Record<Conditions, string> = {
   dry: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
   wet: "text-blue bg-blue/10 border-blue/20",
   damp: "text-amber-400 bg-amber-400/10 border-amber-400/20",
-};
-
-const classBadge: Record<CarClass, string> = {
-  Street: "text-blue bg-blue/10 border-blue/20",
-  "Street Modified": "text-off-white bg-off-white/5 border-off-white/15",
-  "Track Prepared": "text-red-light bg-red/10 border-red/20",
-  Race: "text-red bg-red/10 border-red/30",
 };
 
 export function LapRow({
