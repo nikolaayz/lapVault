@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { inputClass } from "@/lib/ui";
 
 export default function ProfileClient({
   initialName,
@@ -96,7 +97,7 @@ export default function ProfileClient({
               value={name}
               onChange={(e) => { setName(e.target.value); setAccountSuccess(false); }}
               placeholder="Your name"
-              className={input}
+              className={inputClass}
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -106,7 +107,7 @@ export default function ProfileClient({
               value={email}
               onChange={(e) => { setEmail(e.target.value); setAccountSuccess(false); }}
               placeholder="you@example.com"
-              className={input}
+              className={inputClass}
             />
           </div>
         </div>
@@ -137,7 +138,7 @@ export default function ProfileClient({
               value={currentPassword}
               onChange={(e) => { setCurrentPassword(e.target.value); setPasswordSuccess(false); }}
               placeholder="••••••••"
-              className={input}
+              className={inputClass}
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -147,7 +148,7 @@ export default function ProfileClient({
               value={newPassword}
               onChange={(e) => { setNewPassword(e.target.value); setPasswordSuccess(false); }}
               placeholder="••••••••"
-              className={input}
+              className={inputClass}
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -157,7 +158,7 @@ export default function ProfileClient({
               value={confirmPassword}
               onChange={(e) => { setConfirmPassword(e.target.value); setPasswordSuccess(false); }}
               placeholder="••••••••"
-              className={input}
+              className={inputClass}
             />
           </div>
         </div>
@@ -181,5 +182,3 @@ export default function ProfileClient({
   );
 }
 
-const input =
-  "bg-carbon border border-card rounded-lg px-3 py-2 text-sm text-off-white placeholder:text-muted/50 focus:outline-none focus:border-red transition-colors w-full";

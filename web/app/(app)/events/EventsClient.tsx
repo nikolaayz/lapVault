@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
+import { Field } from "@/components/ui/Field";
+import { inputClass } from "@/lib/ui";
+import { CarClass, CAR_CLASSES } from "@/lib/types";
+import { formatDateLong as formatDate } from "@/lib/formatters";
 
 export type RegistrationStatus = "pending" | "confirmed" | "cancelled";
-export type CarClass = "Street" | "Street Modified" | "Track Prepared" | "Race";
 
 export interface EventTrack {
   id: number;
@@ -36,17 +39,6 @@ export interface Event {
 }
 
 // ── Utilities ──────────────────────────────────────────────────────────────────
-
-const CAR_CLASSES: CarClass[] = ["Street", "Street Modified", "Track Prepared", "Race"];
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
@@ -589,12 +581,12 @@ function EventModal({
               value={form.title}
               onChange={(e) => set("title", e.target.value)}
               placeholder="BMW Club Track Day"
-              className={input}
+              className={inputClass}
             />
           </Field>
 
           <Field label="Track" required>
-            <select value={form.trackId} onChange={(e) => set("trackId", e.target.value)} className={input}>
+            <select value={form.trackId} onChange={(e) => set("trackId", e.target.value)} className={inputClass}>
               <option value="">Select a track…</option>
               {tracks.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -610,7 +602,7 @@ function EventModal({
                 type="datetime-local"
                 value={form.date}
                 onChange={(e) => set("date", e.target.value)}
-                className={`${input} pr-9 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
+                className={`${inputClass} pr-9 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
               />
               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted">
                 <CalendarIcon />
@@ -625,7 +617,7 @@ function EventModal({
               onChange={(e) => set("maxParticipants", e.target.value)}
               placeholder="20"
               min={1}
-              className={input}
+              className={inputClass}
             />
           </Field>
 
@@ -660,7 +652,7 @@ function EventModal({
               onChange={(e) => set("description", e.target.value)}
               placeholder="Additional details, requirements, venue info..."
               rows={3}
-              className={`${input} resize-none`}
+              className={`${inputClass} resize-none`}
             />
           </Field>
         </div>
@@ -728,7 +720,7 @@ function RegisterModal({
           </div>
         ) : (
           <Field label="Select Car" required>
-            <select value={carId} onChange={(e) => onCarChange(e.target.value)} className={input}>
+            <select value={carId} onChange={(e) => onCarChange(e.target.value)} className={inputClass}>
               {cars.map((c) => {
                 const ok = !allowed?.length || allowed.includes(c.class);
                 return (
@@ -772,18 +764,6 @@ function RegisterModal({
 
 // ── Shared ─────────────────────────────────────────────────────────────────────
 
-function Field({ label, required, children }: { label: string; required?: boolean; children: ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-xs font-semibold uppercase tracking-widest text-muted">
-        {label}
-        {required && <span className="text-red ml-0.5">*</span>}
-      </label>
-      {children}
-    </div>
-  );
-}
-
 function CalendarIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -795,5 +775,3 @@ function CalendarIcon() {
   );
 }
 
-const input =
-  "bg-carbon border border-card rounded-lg px-3 py-2 text-sm text-off-white placeholder:text-muted/50 focus:outline-none focus:border-red transition-colors w-full";

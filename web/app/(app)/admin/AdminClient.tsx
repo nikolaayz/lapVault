@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { Field } from "@/components/ui/Field";
+import { inputClass } from "@/lib/ui";
+import { formatDate } from "@/lib/formatters";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -65,10 +68,6 @@ type TrackModal =
   | { open: true; mode: "create" }
   | { open: true; mode: "edit"; track: AdminTrack };
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
-
 const statusBadge: Record<"pending" | "confirmed" | "cancelled", string> = {
   pending: "text-amber-400 bg-amber-400/10 border-amber-400/20",
   confirmed: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
@@ -79,9 +78,6 @@ const roleBadge: Record<"user" | "admin", string> = {
   user: "text-muted bg-muted/10 border-muted/20",
   admin: "text-blue bg-blue/10 border-blue/20",
 };
-
-const input =
-  "bg-carbon border border-card rounded-lg px-3 py-2 text-sm text-off-white placeholder:text-muted/50 focus:outline-none focus:border-red transition-colors w-full";
 
 // ── Root component ─────────────────────────────────────────────────────────────
 
@@ -514,7 +510,7 @@ function TrackModalDialog({
               value={form.name}
               onChange={(e) => set("name", e.target.value)}
               placeholder="Nürburgring"
-              className={input}
+              className={inputClass}
             />
           </Field>
           <Field label="Country" required>
@@ -522,7 +518,7 @@ function TrackModalDialog({
               value={form.country}
               onChange={(e) => set("country", e.target.value)}
               placeholder="Germany"
-              className={input}
+              className={inputClass}
             />
           </Field>
           <Field label="Length (km)">
@@ -530,7 +526,7 @@ function TrackModalDialog({
               value={form.lengthKm}
               onChange={(e) => set("lengthKm", e.target.value)}
               placeholder="20.8"
-              className={input}
+              className={inputClass}
             />
           </Field>
           <Field label="Description">
@@ -539,7 +535,7 @@ function TrackModalDialog({
               onChange={(e) => set("description", e.target.value)}
               placeholder="Classic circuit known for..."
               rows={3}
-              className={`${input} resize-none`}
+              className={`${inputClass} resize-none`}
             />
           </Field>
           <Field label="Photo URL">
@@ -547,7 +543,7 @@ function TrackModalDialog({
               value={form.photoUrl}
               onChange={(e) => set("photoUrl", e.target.value)}
               placeholder="https://..."
-              className={input}
+              className={inputClass}
             />
           </Field>
         </div>
@@ -699,14 +695,3 @@ function Th({ children }: { children: ReactNode }) {
   );
 }
 
-function Field({ label, required, children }: { label: string; required?: boolean; children: ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-xs font-semibold uppercase tracking-widest text-muted">
-        {label}
-        {required && <span className="text-red ml-0.5">*</span>}
-      </label>
-      {children}
-    </div>
-  );
-}

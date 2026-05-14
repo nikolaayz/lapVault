@@ -4,16 +4,7 @@ import { db } from "@/lib/db";
 import { users, laps, cars, tracks, events, eventRegistrations } from "@/lib/db/schema";
 import { eq, count, min, desc, and, isNotNull, gte, asc } from "drizzle-orm";
 import Link from "next/link";
-
-function formatMs(ms: number): string {
-  const m = Math.floor(ms / 60_000);
-  const sec = ((ms % 60_000) / 1000).toFixed(3);
-  return m > 0 ? `${m}:${sec}` : sec;
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
+import { formatDate, formatMs } from "@/lib/formatters";
 
 async function getDashboardData(userId: number) {
   const [userRows, totalRows, latestLapRows, recentLapRows, upcomingEventRows] = await Promise.all([

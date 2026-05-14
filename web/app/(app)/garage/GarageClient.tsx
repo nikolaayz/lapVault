@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-
-export type CarClass = "Street" | "Street Modified" | "Track Prepared" | "Race";
+import { useState } from "react";
+import { Field } from "@/components/ui/Field";
+import { inputClass } from "@/lib/ui";
+import { CarClass, CAR_CLASSES } from "@/lib/types";
+import { EditIcon, TrashIcon } from "@/components/ui/icons";
 
 export interface Car {
   id: number;
@@ -17,8 +19,6 @@ export interface Car {
   photoUrl: string | null;
   createdAt: string;
 }
-
-const CAR_CLASSES: CarClass[] = ["Street", "Street Modified", "Track Prepared", "Race"];
 
 interface FormData {
   make: string;
@@ -290,7 +290,7 @@ function CarModal({
                 value={form.make}
                 onChange={(e) => set("make", e.target.value)}
                 placeholder="BMW"
-                className={input}
+                className={inputClass}
               />
             </Field>
             <Field label="Model" required>
@@ -298,7 +298,7 @@ function CarModal({
                 value={form.model}
                 onChange={(e) => set("model", e.target.value)}
                 placeholder="M3"
-                className={input}
+                className={inputClass}
               />
             </Field>
           </div>
@@ -311,14 +311,14 @@ function CarModal({
                 onChange={(e) => set("year", e.target.value)}
                 min={1950}
                 max={new Date().getFullYear() + 1}
-                className={input}
+                className={inputClass}
               />
             </Field>
             <Field label="Class" required>
               <select
                 value={form.class}
                 onChange={(e) => set("class", e.target.value)}
-                className={input}
+                className={inputClass}
               >
                 {CAR_CLASSES.map((c) => (
                   <option key={c} value={c}>{c}</option>
@@ -334,7 +334,7 @@ function CarModal({
                 value={form.powerHp}
                 onChange={(e) => set("powerHp", e.target.value)}
                 placeholder="420"
-                className={input}
+                className={inputClass}
               />
             </Field>
             <Field label="Weight (kg)">
@@ -343,7 +343,7 @@ function CarModal({
                 value={form.weightKg}
                 onChange={(e) => set("weightKg", e.target.value)}
                 placeholder="1450"
-                className={input}
+                className={inputClass}
               />
             </Field>
           </div>
@@ -354,7 +354,7 @@ function CarModal({
               onChange={(e) => set("modifications", e.target.value)}
               placeholder="Stage 2 tune, coilovers, roll cage..."
               rows={3}
-              className={`${input} resize-none`}
+              className={`${inputClass} resize-none`}
             />
           </Field>
         </div>
@@ -381,37 +381,4 @@ function CarModal({
   );
 }
 
-function Field({ label, required, children }: { label: string; required?: boolean; children: ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-xs font-semibold uppercase tracking-widest text-muted">
-        {label}
-        {required && <span className="text-red ml-0.5">*</span>}
-      </label>
-      {children}
-    </div>
-  );
-}
 
-function EditIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-    </svg>
-  );
-}
-
-function TrashIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="3 6 5 6 21 6" />
-      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-      <path d="M10 11v6M14 11v6" />
-      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-    </svg>
-  );
-}
-
-const input =
-  "bg-carbon border border-card rounded-lg px-3 py-2 text-sm text-off-white placeholder:text-muted/50 focus:outline-none focus:border-red transition-colors w-full";
