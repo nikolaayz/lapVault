@@ -9,4 +9,6 @@ export const C = {
   border: "#2A2A3A",
   errorBg: "rgba(230,59,25,0.1)",
   errorBorder: "rgba(230,59,25,0.25)",
+  successBg: "rgba(52,211,153,0.1)",
+  successBorder: "rgba(52,211,153,0.25)",
 } as const;

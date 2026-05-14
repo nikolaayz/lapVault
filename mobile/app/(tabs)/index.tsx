@@ -12,6 +12,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { apiFetch } from "@/lib/api";
+import { C } from "@/constants/colors";
+import { formatDate, formatMs } from "@/lib/formatters";
 
 type Lap = {
   id: number;
@@ -40,14 +42,6 @@ type DashboardData = {
   recentLaps: Lap[];
   upcomingEvents: Event[];
 };
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 export default function DashboardScreen() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -206,25 +200,6 @@ export default function DashboardScreen() {
     </SafeAreaView>
   );
 }
-
-function formatMs(ms: number): string {
-  const m = Math.floor(ms / 60_000);
-  const sec = ((ms % 60_000) / 1000).toFixed(3);
-  return m > 0 ? `${m}:${sec.padStart(6, "0")}` : sec;
-}
-
-const C = {
-  bg: "#0A0A0F",
-  surface: "#12121A",
-  card: "#1C1C2E",
-  red: "#E63B19",
-  blue: "#3B82F6",
-  offWhite: "#F0F0F5",
-  muted: "#6B6B80",
-  border: "#2A2A3A",
-  errorBg: "rgba(230,59,25,0.1)",
-  errorBorder: "rgba(230,59,25,0.25)",
-} as const;
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },

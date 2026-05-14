@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { API_BASE } from "@/constants/api";
 import { saveToken } from "@/lib/auth";
+import { C } from "@/constants/colors";
 
 export default function RegisterScreen() {
   const [name, setName] = useState("");
@@ -169,18 +170,6 @@ export default function RegisterScreen() {
     </SafeAreaView>
   );
 }
-
-const C = {
-  bg: "#0A0A0F",
-  surface: "#12121A",
-  card: "#1C1C2E",
-  red: "#E63B19",
-  offWhite: "#F0F0F5",
-  muted: "#6B6B80",
-  border: "#2A2A3A",
-  errorBg: "rgba(230,59,25,0.1)",
-  errorBorder: "rgba(230,59,25,0.25)",
-} as const;
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },

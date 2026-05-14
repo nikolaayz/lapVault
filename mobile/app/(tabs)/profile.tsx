@@ -17,6 +17,7 @@ import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { apiFetch } from "@/lib/api";
 import { deleteToken } from "@/lib/auth";
+import { C } from "@/constants/colors";
 
 export default function ProfileScreen() {
   const [name, setName] = useState("");
@@ -258,20 +259,6 @@ export default function ProfileScreen() {
     </SafeAreaView>
   );
 }
-
-const C = {
-  bg: "#0A0A0F",
-  surface: "#12121A",
-  card: "#1C1C2E",
-  red: "#E63B19",
-  offWhite: "#F0F0F5",
-  muted: "#6B6B80",
-  border: "#2A2A3A",
-  errorBg: "rgba(230,59,25,0.1)",
-  errorBorder: "rgba(230,59,25,0.25)",
-  successBg: "rgba(52,211,153,0.1)",
-  successBorder: "rgba(52,211,153,0.25)",
-} as const;
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
