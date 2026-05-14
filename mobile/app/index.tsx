@@ -1,19 +1,9 @@
 import { View, Text, ScrollView, Pressable, StyleSheet, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import { C } from "@/constants/colors";
 
 const { width } = Dimensions.get("window");
-
-const C = {
-  bg: "#0A0A0F",
-  surface: "#12121A",
-  card: "#1C1C2E",
-  red: "#E63B19",
-  blue: "#3B82F6",
-  offWhite: "#F0F0F5",
-  muted: "#6B6B80",
-  border: "#2A2A3A",
-} as const;
 
 const features = [
   {

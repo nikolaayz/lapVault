@@ -1,14 +1,6 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-
-const C = {
-  bg: "#0A0A0F",
-  surface: "#12121A",
-  border: "#2A2A3A",
-  red: "#E63B19",
-  offWhite: "#F0F0F5",
-  muted: "#6B6B80",
-} as const;
+import { C } from "@/constants/colors";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
