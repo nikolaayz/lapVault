@@ -59,6 +59,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="leaderboard"
+        options={{
+          title: "Leaderboard",
+          tabBarIcon: ({ focused }) => tabIcon(focused, "trophy", "trophy-outline"),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
