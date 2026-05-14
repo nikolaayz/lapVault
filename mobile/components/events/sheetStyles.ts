@@ -1,0 +1,31 @@
+import { StyleSheet } from "react-native";
+import { C } from "@/constants/colors";
+
+export const m = StyleSheet.create({
+  overlay: { flex: 1, justifyContent: "flex-end" },
+  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.6)" },
+  sheet: { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 20, paddingTop: 12, maxHeight: "92%", borderTopWidth: 1, borderColor: C.border },
+  handle: { width: 36, height: 4, backgroundColor: C.border, borderRadius: 2, alignSelf: "center", marginBottom: 20 },
+  title: { fontSize: 20, fontWeight: "bold", color: C.offWhite, marginBottom: 4 },
+  label: { fontSize: 11, fontWeight: "700", letterSpacing: 1.5, textTransform: "uppercase", color: C.muted, marginBottom: 6, marginTop: 12 },
+  required: { color: C.red },
+  optional: { fontSize: 10, fontWeight: "400", color: C.muted, textTransform: "none", letterSpacing: 0 },
+  picker: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 13, marginBottom: 4 },
+  pickerValue: { fontSize: 14, color: C.offWhite, flex: 1, marginRight: 8 },
+  pickerPlaceholder: { fontSize: 14, color: C.muted, flex: 1, marginRight: 8 },
+  input: { backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 11, fontSize: 14, color: C.offWhite, marginBottom: 4 },
+  textarea: { height: 72, textAlignVertical: "top" },
+  classPicker: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 4 },
+  classPill: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: C.border, backgroundColor: C.bg },
+  classPillActive: { borderColor: C.red, backgroundColor: "rgba(230,59,25,0.12)" },
+  classPillText: { fontSize: 12, fontWeight: "600", color: C.muted },
+  classPillTextActive: { color: C.red },
+  errorBox: { backgroundColor: C.errorBg, borderWidth: 1, borderColor: C.errorBorder, borderRadius: 8, padding: 12, marginTop: 8 },
+  errorText: { fontSize: 13, color: "#FF6B4A" },
+  actions: { flexDirection: "row", gap: 12, marginTop: 16, marginBottom: 8 },
+  cancelBtn: { flex: 1, paddingVertical: 13, alignItems: "center", borderRadius: 8, borderWidth: 1, borderColor: C.border },
+  cancelText: { fontSize: 14, fontWeight: "600", color: C.muted },
+  saveBtn: { flex: 2, backgroundColor: C.red, paddingVertical: 13, alignItems: "center", borderRadius: 8 },
+  saveBtnText: { fontSize: 14, fontWeight: "700", color: C.offWhite },
+  disabled: { opacity: 0.4 },
+});
