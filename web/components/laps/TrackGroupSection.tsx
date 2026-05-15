@@ -1,5 +1,6 @@
 import { formatMs } from "@/lib/formatters";
 import { LapRow } from "@/components/laps/LapRow";
+import { TrackIcon } from "@/components/ui/TrackIcon";
 import type { Lap, LapGroup } from "@/lib/lapUtils";
 
 export function TrackGroupSection({
@@ -17,6 +18,7 @@ export function TrackGroupSection({
     <div className="rounded-xl overflow-hidden border border-card">
       <div className="bg-card px-5 py-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
+          <TrackIcon name={group.track.name} size={56} />
           <div className="min-w-0">
             <p className="font-bold text-base leading-tight truncate">{group.track.name}</p>
             <p className="text-xs text-muted mt-0.5">

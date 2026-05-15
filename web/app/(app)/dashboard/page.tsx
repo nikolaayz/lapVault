@@ -5,6 +5,7 @@ import { users, laps, cars, tracks, events, eventRegistrations } from "@/lib/db/
 import { eq, count, min, desc, and, isNotNull, gte, asc } from "drizzle-orm";
 import Link from "next/link";
 import { formatDate, formatMs } from "@/lib/formatters";
+import { TrackIcon } from "@/components/ui/TrackIcon";
 
 async function getDashboardData(userId: number) {
   const [userRows, totalRows, latestLapRows, recentLapRows, upcomingEventRows] = await Promise.all([
@@ -127,7 +128,10 @@ export default async function DashboardPage() {
           <p className="text-xs font-semibold uppercase tracking-widest text-muted mb-2">Best Lap</p>
           <p className="text-3xl font-bold font-mono">{bestLapMs != null ? formatMs(bestLapMs) : "—"}</p>
           {trackName && (
-            <p className="text-xs text-muted mt-1.5 truncate">{trackName}</p>
+            <div className="flex items-center gap-2 mt-2">
+              <TrackIcon name={trackName} size={36} />
+              <p className="text-xs text-muted truncate">{trackName}</p>
+            </div>
           )}
         </div>
 
@@ -162,14 +166,15 @@ export default async function DashboardPage() {
           ) : (
             <div className="flex flex-col divide-y divide-card">
               {recentLaps.map((lap) => (
-                <div key={lap.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
-                  <div className="min-w-0">
+                <div key={lap.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                  <TrackIcon name={lap.trackName} size={40} />
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{lap.trackName}</p>
                     <p className="text-xs text-muted mt-0.5">
                       {lap.carYear} {lap.carMake} {lap.carModel} · {formatDate(lap.createdAt)}
                     </p>
                   </div>
-                  <p className="font-mono font-bold text-sm text-off-white shrink-0 ml-4">{formatMs(lap.lapTimeMs)}</p>
+                  <p className="font-mono font-bold text-sm text-off-white shrink-0">{formatMs(lap.lapTimeMs)}</p>
                 </div>
               ))}
             </div>

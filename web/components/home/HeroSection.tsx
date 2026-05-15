@@ -50,10 +50,10 @@ export default function HeroSection({ loggedIn }: { loggedIn: boolean }) {
                 Start for Free
               </Link>
               <Link
-                href="/tracks"
+                href="/leaderboard"
                 className="inline-flex items-center justify-center px-8 py-3 rounded-md font-semibold text-base bg-card text-off-white border border-card transition-colors hover:border-muted"
               >
-                Browse Tracks →
+                View Leaderboard →
               </Link>
             </>
           )}

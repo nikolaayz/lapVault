@@ -7,7 +7,6 @@ import type { CarClass } from "@/lib/types";
 
 export async function GET(req: NextRequest) {
   const session = await getSession(req);
-  if (!session) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
   const trackId = parseInt(searchParams.get("trackId") ?? "");
@@ -56,7 +55,7 @@ export async function GET(req: NextRequest) {
       carModel: e.carModel,
       carYear: e.carYear,
       carClass: e.carClass,
-      isCurrentUser: e.userId === session.userId,
+      isCurrentUser: session ? e.userId === session.userId : false,
     }))
   );
 }
