@@ -9,7 +9,9 @@
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "npx tsx seed.ts",
+    "db:seed:bulk": "npx tsx seed-bulk.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

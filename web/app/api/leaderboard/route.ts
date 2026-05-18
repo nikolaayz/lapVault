@@ -11,7 +11,9 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const trackId = parseInt(searchParams.get("trackId") ?? "");
   const carClass = searchParams.get("class") as CarClass | null;
-  const limit = Math.min(Math.max(parseInt(searchParams.get("limit") ?? "50"), 1), 200);
+  const limit = Math.min(Math.max(parseInt(searchParams.get("limit") ?? "25"), 1), 200);
+  const page = Math.max(parseInt(searchParams.get("page") ?? "1"), 1);
+  const offset = (page - 1) * limit;
 
   if (isNaN(trackId)) return NextResponse.json({ error: "trackId is required" }, { status: 400 });
 
@@ -44,9 +46,13 @@ export async function GET(req: NextRequest) {
     if (!seen.has(key)) seen.set(key, row);
   }
 
-  return NextResponse.json(
-    Array.from(seen.values()).slice(0, limit).map((e, i) => ({
-      rank: i + 1,
+  const allEntries = Array.from(seen.values());
+  const total = allEntries.length;
+  const pageEntries = allEntries.slice(offset, offset + limit);
+
+  return NextResponse.json({
+    data: pageEntries.map((e, i) => ({
+      rank: offset + i + 1,
       userId: e.userId,
       userName: e.userName,
       lapTimeMs: e.lapTimeMs,
@@ -57,6 +63,9 @@ export async function GET(req: NextRequest) {
       carYear: e.carYear,
       carClass: e.carClass,
       isCurrentUser: session ? e.userId === session.userId : false,
-    }))
-  );
+    })),
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+  });
 }

@@ -107,7 +107,7 @@ export default async function EventsPage(props: { searchParams: Promise<{ page?:
 
   return (
     <>
-      <EventsClient initialEvents={initialEvents} cars={userCars} tracks={allTracks} isAdmin={isAdmin} />
+      <EventsClient key={page} initialEvents={initialEvents} cars={userCars} tracks={allTracks} isAdmin={isAdmin} />
       <Pagination page={page} totalPages={totalPages} total={total} basePath="/events" />
     </>
   );

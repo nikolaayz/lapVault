@@ -95,7 +95,7 @@ export default async function LapsPage(props: { searchParams: Promise<{ page?: s
 
   return (
     <>
-      <LapsClient initialLaps={initialLaps} cars={userCars} tracks={allTracks} />
+      <LapsClient key={page} initialLaps={initialLaps} cars={userCars} tracks={allTracks} />
       <Pagination page={page} totalPages={totalPages} total={total} basePath="/laps" />
     </>
   );

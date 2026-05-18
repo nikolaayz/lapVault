@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { formatMs, formatDate } from "@/lib/formatters";
 import { CAR_CLASSES, classBadge } from "@/lib/types";
 import type { CarClass } from "@/lib/types";
+import ClientPagination from "@/components/ui/ClientPagination";
 
 interface LeaderboardEntry {
   rank: number;
@@ -34,22 +35,35 @@ const conditionsBadge: Record<string, string> = {
 
 const medals = ["🥇", "🥈", "🥉"];
 
+const PAGE_SIZE = 25;
+
 export default function LeaderboardClient({ tracks }: { tracks: Track[] }) {
   const [selectedTrackId, setSelectedTrackId] = useState(tracks[0]?.id.toString() ?? "");
   const [selectedClass, setSelectedClass] = useState<CarClass | "">("");
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+
+  useEffect(() => {
+    setPage(1);
+  }, [selectedTrackId, selectedClass]);
 
   useEffect(() => {
     if (!selectedTrackId) return;
     setLoading(true);
-    const params = new URLSearchParams({ trackId: selectedTrackId });
+    const params = new URLSearchParams({ trackId: selectedTrackId, page: String(page), limit: String(PAGE_SIZE) });
     if (selectedClass) params.set("class", selectedClass);
     fetch(`/api/leaderboard?${params}`)
       .then((r) => r.json())
-      .then((data) => setEntries(Array.isArray(data) ? data : []))
+      .then((data) => {
+        setEntries(Array.isArray(data.data) ? data.data : []);
+        setTotal(data.total ?? 0);
+        setTotalPages(data.totalPages ?? 1);
+      })
       .finally(() => setLoading(false));
-  }, [selectedTrackId, selectedClass]);
+  }, [selectedTrackId, selectedClass, page]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -154,6 +168,7 @@ export default function LeaderboardClient({ tracks }: { tracks: Track[] }) {
               ))
             )}
           </div>
+          <ClientPagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
         </>
       )}
     </div>
