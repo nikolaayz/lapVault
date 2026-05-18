@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, timestamp, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, timestamp, pgEnum, index } from "drizzle-orm/pg-core";
 
 export const roleEnum = pgEnum("role", ["user", "admin"]);
 export const carClassEnum = pgEnum("car_class", ["Street", "Street Modified", "Track Prepared", "Race"]);
@@ -26,7 +26,9 @@ export const cars = pgTable("cars", {
   modifications: text("modifications"),
   photoUrl: text("photo_url"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => [
+  index("cars_owner_id_idx").on(table.ownerId),
+]);
 
 export const tracks = pgTable("tracks", {
   id: serial("id").primaryKey(),
@@ -48,7 +50,10 @@ export const events = pgTable("events", {
   allowedClasses: text("allowed_classes").array(),
   description: text("description"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => [
+  index("events_date_idx").on(table.date),
+  index("events_track_id_idx").on(table.trackId),
+]);
 
 export const eventRegistrations = pgTable("event_registrations", {
   id: serial("id").primaryKey(),
@@ -57,7 +62,10 @@ export const eventRegistrations = pgTable("event_registrations", {
   carId: integer("car_id").notNull().references(() => cars.id),
   status: registrationStatusEnum("status").notNull().default("pending"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => [
+  index("event_registrations_user_id_idx").on(table.userId),
+  index("event_registrations_event_id_idx").on(table.eventId),
+]);
 
 export const laps = pgTable("laps", {
   id: serial("id").primaryKey(),
@@ -72,4 +80,7 @@ export const laps = pgTable("laps", {
   conditions: conditionsEnum("conditions").notNull().default("dry"),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => [
+  index("laps_user_id_idx").on(table.userId),
+  index("laps_track_id_lap_time_idx").on(table.trackId, table.lapTimeMs),
+]);
