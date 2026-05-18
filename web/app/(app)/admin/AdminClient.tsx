@@ -50,6 +50,8 @@ export type AdminStats = {
 
 // ── Utilities ──────────────────────────────────────────────────────────────────
 
+const PAGE_SIZE = 20;
+
 type Tab = "overview" | "users" | "tracks" | "registrations";
 type RegFilter = "all" | "pending" | "confirmed" | "cancelled";
 
@@ -99,6 +101,10 @@ export default function AdminClient({
   const [tracks, setTracks] = useState(initialTracks);
   const [regs, setRegs] = useState(initialRegistrations);
   const [regFilter, setRegFilter] = useState<RegFilter>("all");
+
+  const [usersPage, setUsersPage] = useState(1);
+  const [tracksPage, setTracksPage] = useState(1);
+  const [regsPage, setRegsPage] = useState(1);
 
   const [trackModal, setTrackModal] = useState<TrackModal>({ open: false });
   const [trackForm, setTrackForm] = useState<TrackForm>(emptyTrackForm);
@@ -223,6 +229,15 @@ export default function AdminClient({
 
   const filteredRegs = regFilter === "all" ? regs : regs.filter((r) => r.status === regFilter);
 
+  function handleRegFilterChange(f: RegFilter) {
+    setRegFilter(f);
+    setRegsPage(1);
+  }
+
+  const pagedUsers = users.slice((usersPage - 1) * PAGE_SIZE, usersPage * PAGE_SIZE);
+  const pagedTracks = tracks.slice((tracksPage - 1) * PAGE_SIZE, tracksPage * PAGE_SIZE);
+  const pagedRegs = filteredRegs.slice((regsPage - 1) * PAGE_SIZE, regsPage * PAGE_SIZE);
+
   const tabs: { id: Tab; label: string }[] = [
     { id: "overview", label: "Overview" },
     { id: "users", label: `Users (${users.length})` },
@@ -257,7 +272,11 @@ export default function AdminClient({
 
       {tab === "users" && (
         <UsersSection
-          users={users}
+          users={pagedUsers}
+          total={users.length}
+          page={usersPage}
+          totalPages={Math.ceil(users.length / PAGE_SIZE)}
+          onPageChange={setUsersPage}
           currentUserId={currentUserId}
           togglingId={togglingId}
           onToggleRole={handleToggleRole}
@@ -266,7 +285,11 @@ export default function AdminClient({
 
       {tab === "tracks" && (
         <TracksSection
-          tracks={tracks}
+          tracks={pagedTracks}
+          total={tracks.length}
+          page={tracksPage}
+          totalPages={Math.ceil(tracks.length / PAGE_SIZE)}
+          onPageChange={setTracksPage}
           deletingId={deletingTrackId}
           onAdd={openCreate}
           onEdit={openEdit}
@@ -276,7 +299,7 @@ export default function AdminClient({
 
       {tab === "registrations" && (
         <RegistrationsSection
-          regs={filteredRegs}
+          regs={pagedRegs}
           filter={regFilter}
           totalCounts={{
             all: regs.length,
@@ -284,8 +307,12 @@ export default function AdminClient({
             confirmed: regs.filter((r) => r.status === "confirmed").length,
             cancelled: regs.filter((r) => r.status === "cancelled").length,
           }}
+          total={filteredRegs.length}
+          page={regsPage}
+          totalPages={Math.ceil(filteredRegs.length / PAGE_SIZE)}
+          onPageChange={setRegsPage}
           updatingId={updatingRegId}
-          onFilterChange={setRegFilter}
+          onFilterChange={handleRegFilterChange}
           onUpdateStatus={handleUpdateRegStatus}
         />
       )}
@@ -335,61 +362,72 @@ function OverviewSection({ stats }: { stats: AdminStats }) {
 
 function UsersSection({
   users,
+  total,
+  page,
+  totalPages,
+  onPageChange,
   currentUserId,
   togglingId,
   onToggleRole,
 }: {
   users: AdminUser[];
+  total: number;
+  page: number;
+  totalPages: number;
+  onPageChange: (p: number) => void;
   currentUserId: number;
   togglingId: number | null;
   onToggleRole: (userId: number, currentRole: "user" | "admin") => void;
 }) {
-  if (users.length === 0) {
+  if (total === 0) {
     return <p className="text-sm text-muted">No users found.</p>;
   }
 
   return (
-    <div className="bg-card rounded-xl border border-card overflow-hidden">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-card">
-            <Th>Name</Th>
-            <Th>Email</Th>
-            <Th>Role</Th>
-            <Th>Joined</Th>
-            <th className="px-5 py-3" />
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-card">
-          {users.map((user) => (
-            <tr key={user.id} className="hover:bg-carbon/40 transition-colors">
-              <td className="px-5 py-3 font-medium text-off-white">{user.name}</td>
-              <td className="px-5 py-3 text-muted">{user.email}</td>
-              <td className="px-5 py-3">
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${roleBadge[user.role]}`}>
-                  {user.role}
-                </span>
-              </td>
-              <td className="px-5 py-3 text-muted">{formatDate(user.createdAt)}</td>
-              <td className="px-5 py-3 text-right">
-                {user.id !== currentUserId && (
-                  <button
-                    onClick={() => onToggleRole(user.id, user.role)}
-                    disabled={togglingId === user.id}
-                    className="text-xs text-muted hover:text-off-white transition-colors px-2 py-1 rounded hover:bg-off-white/5 disabled:opacity-40"
-                  >
-                    {togglingId === user.id
-                      ? "Saving…"
-                      : user.role === "admin"
-                      ? "Revoke admin"
-                      : "Make admin"}
-                  </button>
-                )}
-              </td>
+    <div className="flex flex-col gap-0">
+      <div className="bg-card rounded-xl border border-card overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-card">
+              <Th>Name</Th>
+              <Th>Email</Th>
+              <Th>Role</Th>
+              <Th>Joined</Th>
+              <th className="px-5 py-3" />
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-card">
+            {users.map((user) => (
+              <tr key={user.id} className="hover:bg-carbon/40 transition-colors">
+                <td className="px-5 py-3 font-medium text-off-white">{user.name}</td>
+                <td className="px-5 py-3 text-muted">{user.email}</td>
+                <td className="px-5 py-3">
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${roleBadge[user.role]}`}>
+                    {user.role}
+                  </span>
+                </td>
+                <td className="px-5 py-3 text-muted">{formatDate(user.createdAt)}</td>
+                <td className="px-5 py-3 text-right">
+                  {user.id !== currentUserId && (
+                    <button
+                      onClick={() => onToggleRole(user.id, user.role)}
+                      disabled={togglingId === user.id}
+                      className="text-xs text-muted hover:text-off-white transition-colors px-2 py-1 rounded hover:bg-off-white/5 disabled:opacity-40"
+                    >
+                      {togglingId === user.id
+                        ? "Saving…"
+                        : user.role === "admin"
+                        ? "Revoke admin"
+                        : "Make admin"}
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <ClientPagination page={page} totalPages={totalPages} total={total} onPageChange={onPageChange} />
     </div>
   );
 }
@@ -398,12 +436,20 @@ function UsersSection({
 
 function TracksSection({
   tracks,
+  total,
+  page,
+  totalPages,
+  onPageChange,
   deletingId,
   onAdd,
   onEdit,
   onDelete,
 }: {
   tracks: AdminTrack[];
+  total: number;
+  page: number;
+  totalPages: number;
+  onPageChange: (p: number) => void;
   deletingId: number | null;
   onAdd: () => void;
   onEdit: (track: AdminTrack) => void;
@@ -420,52 +466,55 @@ function TracksSection({
         </button>
       </div>
 
-      {tracks.length === 0 ? (
+      {total === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <p className="text-sm text-muted">No tracks yet.</p>
           <p className="text-xs text-muted mt-1">Add the first track to get started.</p>
         </div>
       ) : (
-        <div className="bg-card rounded-xl border border-card overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-card">
-                <Th>Name</Th>
-                <Th>Country</Th>
-                <Th>Length</Th>
-                <Th>Description</Th>
-                <th className="px-5 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-card">
-              {tracks.map((track) => (
-                <tr key={track.id} className="hover:bg-carbon/40 transition-colors">
-                  <td className="px-5 py-3 font-medium text-off-white">{track.name}</td>
-                  <td className="px-5 py-3 text-muted">{track.country}</td>
-                  <td className="px-5 py-3 text-muted">{track.lengthKm ? `${track.lengthKm} km` : "—"}</td>
-                  <td className="px-5 py-3 text-muted max-w-xs truncate">{track.description ?? "—"}</td>
-                  <td className="px-5 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <button
-                        onClick={() => onEdit(track)}
-                        className="text-xs text-muted hover:text-off-white transition-colors px-2 py-1 rounded hover:bg-off-white/5"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => onDelete(track.id)}
-                        disabled={deletingId === track.id}
-                        className="text-xs text-muted hover:text-red transition-colors px-2 py-1 rounded hover:bg-red/5 disabled:opacity-40"
-                      >
-                        {deletingId === track.id ? "Deleting…" : "Delete"}
-                      </button>
-                    </div>
-                  </td>
+        <>
+          <div className="bg-card rounded-xl border border-card overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-card">
+                  <Th>Name</Th>
+                  <Th>Country</Th>
+                  <Th>Length</Th>
+                  <Th>Description</Th>
+                  <th className="px-5 py-3" />
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-card">
+                {tracks.map((track) => (
+                  <tr key={track.id} className="hover:bg-carbon/40 transition-colors">
+                    <td className="px-5 py-3 font-medium text-off-white">{track.name}</td>
+                    <td className="px-5 py-3 text-muted">{track.country}</td>
+                    <td className="px-5 py-3 text-muted">{track.lengthKm ? `${track.lengthKm} km` : "—"}</td>
+                    <td className="px-5 py-3 text-muted max-w-xs truncate">{track.description ?? "—"}</td>
+                    <td className="px-5 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => onEdit(track)}
+                          className="text-xs text-muted hover:text-off-white transition-colors px-2 py-1 rounded hover:bg-off-white/5"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => onDelete(track.id)}
+                          disabled={deletingId === track.id}
+                          className="text-xs text-muted hover:text-red transition-colors px-2 py-1 rounded hover:bg-red/5 disabled:opacity-40"
+                        >
+                          {deletingId === track.id ? "Deleting…" : "Delete"}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <ClientPagination page={page} totalPages={totalPages} total={total} onPageChange={onPageChange} />
+        </>
       )}
     </div>
   );
@@ -573,6 +622,10 @@ function RegistrationsSection({
   regs,
   filter,
   totalCounts,
+  total,
+  page,
+  totalPages,
+  onPageChange,
   updatingId,
   onFilterChange,
   onUpdateStatus,
@@ -580,6 +633,10 @@ function RegistrationsSection({
   regs: AdminRegistration[];
   filter: RegFilter;
   totalCounts: Record<RegFilter, number>;
+  total: number;
+  page: number;
+  totalPages: number;
+  onPageChange: (p: number) => void;
   updatingId: number | null;
   onFilterChange: (f: RegFilter) => void;
   onUpdateStatus: (id: number, status: "confirmed" | "cancelled") => void;
@@ -609,83 +666,123 @@ function RegistrationsSection({
         ))}
       </div>
 
-      {regs.length === 0 ? (
+      {total === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <p className="text-sm text-muted">
             No registrations{filter !== "all" ? ` with status "${filter}"` : ""}.
           </p>
         </div>
       ) : (
-        <div className="bg-card rounded-xl border border-card overflow-x-auto">
-          <table className="w-full text-sm min-w-[800px]">
-            <thead>
-              <tr className="border-b border-card">
-                <Th>User</Th>
-                <Th>Event</Th>
-                <Th>Car</Th>
-                <Th>Status</Th>
-                <Th>Registered</Th>
-                <th className="px-5 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-card">
-              {regs.map((reg) => (
-                <tr key={reg.id} className="hover:bg-carbon/40 transition-colors">
-                  <td className="px-5 py-3">
-                    <p className="font-medium text-off-white">{reg.userName}</p>
-                    <p className="text-xs text-muted">{reg.userEmail}</p>
-                  </td>
-                  <td className="px-5 py-3">
-                    <p className="text-off-white">{reg.eventTitle}</p>
-                    <p className="text-xs text-muted">
-                      {reg.trackName} · {formatDate(reg.eventDate)}
-                    </p>
-                  </td>
-                  <td className="px-5 py-3">
-                    <p className="text-off-white">
-                      {reg.carYear} {reg.carMake} {reg.carModel}
-                    </p>
-                    <p className="text-xs text-muted">{reg.carClass}</p>
-                  </td>
-                  <td className="px-5 py-3">
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${statusBadge[reg.status]}`}>
-                      {reg.status}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3 text-muted">{formatDate(reg.createdAt)}</td>
-                  <td className="px-5 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      {reg.status !== "confirmed" && (
-                        <button
-                          onClick={() => onUpdateStatus(reg.id, "confirmed")}
-                          disabled={updatingId === reg.id}
-                          className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors px-2 py-1 rounded hover:bg-emerald-400/5 disabled:opacity-40"
-                        >
-                          Confirm
-                        </button>
-                      )}
-                      {reg.status !== "cancelled" && (
-                        <button
-                          onClick={() => onUpdateStatus(reg.id, "cancelled")}
-                          disabled={updatingId === reg.id}
-                          className="text-xs text-muted hover:text-red transition-colors px-2 py-1 rounded hover:bg-red/5 disabled:opacity-40"
-                        >
-                          Cancel
-                        </button>
-                      )}
-                    </div>
-                  </td>
+        <>
+          <div className="bg-card rounded-xl border border-card overflow-x-auto">
+            <table className="w-full text-sm min-w-[800px]">
+              <thead>
+                <tr className="border-b border-card">
+                  <Th>User</Th>
+                  <Th>Event</Th>
+                  <Th>Car</Th>
+                  <Th>Status</Th>
+                  <Th>Registered</Th>
+                  <th className="px-5 py-3" />
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-card">
+                {regs.map((reg) => (
+                  <tr key={reg.id} className="hover:bg-carbon/40 transition-colors">
+                    <td className="px-5 py-3">
+                      <p className="font-medium text-off-white">{reg.userName}</p>
+                      <p className="text-xs text-muted">{reg.userEmail}</p>
+                    </td>
+                    <td className="px-5 py-3">
+                      <p className="text-off-white">{reg.eventTitle}</p>
+                      <p className="text-xs text-muted">
+                        {reg.trackName} · {formatDate(reg.eventDate)}
+                      </p>
+                    </td>
+                    <td className="px-5 py-3">
+                      <p className="text-off-white">
+                        {reg.carYear} {reg.carMake} {reg.carModel}
+                      </p>
+                      <p className="text-xs text-muted">{reg.carClass}</p>
+                    </td>
+                    <td className="px-5 py-3">
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${statusBadge[reg.status]}`}>
+                        {reg.status}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3 text-muted">{formatDate(reg.createdAt)}</td>
+                    <td className="px-5 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {reg.status !== "confirmed" && (
+                          <button
+                            onClick={() => onUpdateStatus(reg.id, "confirmed")}
+                            disabled={updatingId === reg.id}
+                            className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors px-2 py-1 rounded hover:bg-emerald-400/5 disabled:opacity-40"
+                          >
+                            Confirm
+                          </button>
+                        )}
+                        {reg.status !== "cancelled" && (
+                          <button
+                            onClick={() => onUpdateStatus(reg.id, "cancelled")}
+                            disabled={updatingId === reg.id}
+                            className="text-xs text-muted hover:text-red transition-colors px-2 py-1 rounded hover:bg-red/5 disabled:opacity-40"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <ClientPagination page={page} totalPages={totalPages} total={total} onPageChange={onPageChange} />
+        </>
       )}
     </div>
   );
 }
 
 // ── Shared ─────────────────────────────────────────────────────────────────────
+
+function ClientPagination({
+  page,
+  totalPages,
+  total,
+  onPageChange,
+}: {
+  page: number;
+  totalPages: number;
+  total: number;
+  onPageChange: (p: number) => void;
+}) {
+  if (totalPages <= 1) return null;
+
+  const btn = "px-4 py-2 rounded-lg border text-sm font-medium transition-colors";
+  const active = `${btn} bg-card border-card text-off-white hover:border-red/40`;
+  const disabled = `${btn} bg-card/30 border-card/30 text-muted cursor-not-allowed`;
+
+  return (
+    <div className="flex items-center justify-center gap-3 py-6">
+      {page > 1 ? (
+        <button onClick={() => onPageChange(page - 1)} className={active}>← Prev</button>
+      ) : (
+        <span className={disabled}>← Prev</span>
+      )}
+      <span className="text-sm text-muted">
+        Page {page} of {totalPages}
+        <span className="hidden sm:inline"> · {total} total</span>
+      </span>
+      {page < totalPages ? (
+        <button onClick={() => onPageChange(page + 1)} className={active}>Next →</button>
+      ) : (
+        <span className={disabled}>Next →</span>
+      )}
+    </div>
+  );
+}
 
 function Th({ children }: { children: ReactNode }) {
   return (

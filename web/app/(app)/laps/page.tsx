@@ -2,11 +2,16 @@ import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/auth/jwt";
 import { db } from "@/lib/db";
 import { laps, cars, tracks } from "@/lib/db/schema";
-import { eq, desc, asc } from "drizzle-orm";
+import { eq, desc, asc, count } from "drizzle-orm";
 import LapsClient, { type Lap, type LapCar, type Track } from "./LapsClient";
+import Pagination from "@/components/ui/Pagination";
 
-async function getPageData(userId: number) {
-  const [userCars, allTracks, lapRows] = await Promise.all([
+const PAGE_SIZE = 25;
+
+async function getPageData(userId: number, page: number) {
+  const offset = (page - 1) * PAGE_SIZE;
+
+  const [userCars, allTracks, lapRows, [{ total }]] = await Promise.all([
     db
       .select({ id: cars.id, make: cars.make, model: cars.model, year: cars.year, class: cars.class })
       .from(cars)
@@ -42,7 +47,11 @@ async function getPageData(userId: number) {
       .innerJoin(cars, eq(laps.carId, cars.id))
       .innerJoin(tracks, eq(laps.trackId, tracks.id))
       .where(eq(laps.userId, userId))
-      .orderBy(desc(laps.createdAt)),
+      .orderBy(desc(laps.createdAt))
+      .limit(PAGE_SIZE)
+      .offset(offset),
+
+    db.select({ total: count() }).from(laps).where(eq(laps.userId, userId)),
   ]);
 
   const initialLaps: Lap[] = lapRows.map((r) => ({
@@ -58,25 +67,36 @@ async function getPageData(userId: number) {
     track: { id: r.trackId, name: r.trackName, country: r.trackCountry, lengthKm: r.trackLengthKm },
   }));
 
-  return { userCars, allTracks, initialLaps };
+  return { userCars, allTracks, initialLaps, total: Number(total) };
 }
 
-export default async function LapsPage() {
+export default async function LapsPage(props: { searchParams: Promise<{ page?: string }> }) {
+  const searchParams = await props.searchParams;
+  const page = Math.max(parseInt(searchParams.page ?? "1"), 1);
+
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
   let initialLaps: Lap[] = [];
   let userCars: LapCar[] = [];
   let allTracks: Track[] = [];
+  let total = 0;
 
   if (token) {
     try {
       const { userId } = await verifyToken(token);
-      ({ userCars, allTracks, initialLaps } = await getPageData(userId));
+      ({ userCars, allTracks, initialLaps, total } = await getPageData(userId, page));
     } catch {
       // layout handles redirect
     }
   }
 
-  return <LapsClient initialLaps={initialLaps} cars={userCars} tracks={allTracks} />;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  return (
+    <>
+      <LapsClient initialLaps={initialLaps} cars={userCars} tracks={allTracks} />
+      <Pagination page={page} totalPages={totalPages} total={total} basePath="/laps" />
+    </>
+  );
 }

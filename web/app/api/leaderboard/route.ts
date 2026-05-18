@@ -11,6 +11,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const trackId = parseInt(searchParams.get("trackId") ?? "");
   const carClass = searchParams.get("class") as CarClass | null;
+  const limit = Math.min(Math.max(parseInt(searchParams.get("limit") ?? "50"), 1), 200);
 
   if (isNaN(trackId)) return NextResponse.json({ error: "trackId is required" }, { status: 400 });
 
@@ -44,7 +45,7 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json(
-    Array.from(seen.values()).map((e, i) => ({
+    Array.from(seen.values()).slice(0, limit).map((e, i) => ({
       rank: i + 1,
       userId: e.userId,
       userName: e.userName,

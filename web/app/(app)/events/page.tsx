@@ -4,9 +4,14 @@ import { db } from "@/lib/db";
 import { events, tracks, users, eventRegistrations, cars } from "@/lib/db/schema";
 import { eq, asc, count } from "drizzle-orm";
 import EventsClient, { type Event, type EventCar, type EventTrack } from "./EventsClient";
+import Pagination from "@/components/ui/Pagination";
 
-async function getPageData(userId: number) {
-  const [eventRows, regCountRows, userRegRows, userCars, allTracks] = await Promise.all([
+const PAGE_SIZE = 25;
+
+async function getPageData(userId: number, page: number) {
+  const offset = (page - 1) * PAGE_SIZE;
+
+  const [eventRows, regCountRows, userRegRows, userCars, allTracks, [{ total }]] = await Promise.all([
     db
       .select({
         id: events.id,
@@ -26,7 +31,9 @@ async function getPageData(userId: number) {
       .from(events)
       .innerJoin(tracks, eq(events.trackId, tracks.id))
       .innerJoin(users, eq(events.createdBy, users.id))
-      .orderBy(asc(events.date)),
+      .orderBy(asc(events.date))
+      .limit(PAGE_SIZE)
+      .offset(offset),
 
     db
       .select({ eventId: eventRegistrations.eventId, total: count(eventRegistrations.id) })
@@ -48,6 +55,8 @@ async function getPageData(userId: number) {
       .select({ id: tracks.id, name: tracks.name, country: tracks.country, lengthKm: tracks.lengthKm })
       .from(tracks)
       .orderBy(asc(tracks.name)),
+
+    db.select({ total: count() }).from(events),
   ]);
 
   const countMap = new Map(regCountRows.map((r) => [r.eventId, Number(r.total)]));
@@ -68,10 +77,13 @@ async function getPageData(userId: number) {
     myRegistration: regMap.get(r.id) ?? null,
   }));
 
-  return { initialEvents, userCars, allTracks };
+  return { initialEvents, userCars, allTracks, total: Number(total) };
 }
 
-export default async function EventsPage() {
+export default async function EventsPage(props: { searchParams: Promise<{ page?: string }> }) {
+  const searchParams = await props.searchParams;
+  const page = Math.max(parseInt(searchParams.page ?? "1"), 1);
+
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
@@ -79,16 +91,24 @@ export default async function EventsPage() {
   let userCars: EventCar[] = [];
   let allTracks: EventTrack[] = [];
   let isAdmin = false;
+  let total = 0;
 
   if (token) {
     try {
       const { userId, role } = await verifyToken(token);
       isAdmin = role === "admin";
-      ({ initialEvents, userCars, allTracks } = await getPageData(userId));
+      ({ initialEvents, userCars, allTracks, total } = await getPageData(userId, page));
     } catch {
       // layout handles redirect
     }
   }
 
-  return <EventsClient initialEvents={initialEvents} cars={userCars} tracks={allTracks} isAdmin={isAdmin} />;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  return (
+    <>
+      <EventsClient initialEvents={initialEvents} cars={userCars} tracks={allTracks} isAdmin={isAdmin} />
+      <Pagination page={page} totalPages={totalPages} total={total} basePath="/events" />
+    </>
+  );
 }
