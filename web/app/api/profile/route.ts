@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
   const [user] = await db
-    .select({ name: users.name, email: users.email })
+    .select({ name: users.name, email: users.email, avatarUrl: users.avatarUrl })
     .from(users)
     .where(eq(users.id, session.userId))
     .limit(1);
@@ -23,7 +23,7 @@ export async function PUT(req: NextRequest) {
   const session = await getSession(req);
   if (!session) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
-  const { name, email } = await req.json();
+  const { name, email, avatarUrl } = await req.json();
 
   if (!name?.trim()) return NextResponse.json({ error: "Name is required" }, { status: 400 });
   if (!email?.trim()) return NextResponse.json({ error: "Email is required" }, { status: 400 });
@@ -40,9 +40,9 @@ export async function PUT(req: NextRequest) {
 
   const [updated] = await db
     .update(users)
-    .set({ name: name.trim(), email: emailLower })
+    .set({ name: name.trim(), email: emailLower, avatarUrl: avatarUrl ?? undefined })
     .where(eq(users.id, session.userId))
-    .returning({ name: users.name, email: users.email });
+    .returning({ name: users.name, email: users.email, avatarUrl: users.avatarUrl });
 
   return NextResponse.json(updated);
 }

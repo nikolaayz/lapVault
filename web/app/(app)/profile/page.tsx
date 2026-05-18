@@ -11,20 +11,21 @@ export default async function ProfilePage() {
 
   let name = "";
   let email = "";
+  let avatarUrl: string | null = null;
 
   if (token) {
     try {
       const { userId } = await verifyToken(token);
       const [user] = await db
-        .select({ name: users.name, email: users.email })
+        .select({ name: users.name, email: users.email, avatarUrl: users.avatarUrl })
         .from(users)
         .where(eq(users.id, userId))
         .limit(1);
-      if (user) { name = user.name; email = user.email; }
+      if (user) { name = user.name; email = user.email; avatarUrl = user.avatarUrl; }
     } catch {
       // layout handles redirect
     }
   }
 
-  return <ProfileClient initialName={name} initialEmail={email} />;
+  return <ProfileClient initialName={name} initialEmail={email} initialAvatarUrl={avatarUrl} />;
 }

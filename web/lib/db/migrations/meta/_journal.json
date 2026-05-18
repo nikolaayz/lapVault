@@ -15,6 +15,13 @@
       "when": 1779124090024,
       "tag": "0001_red_tinkerer",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779139561192,
+      "tag": "0002_absurd_wrecking_crew",
+      "breakpoints": true
     }
   ]
 }

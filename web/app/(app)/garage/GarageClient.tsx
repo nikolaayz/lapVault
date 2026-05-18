@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Field } from "@/components/ui/Field";
 import { inputClass } from "@/lib/ui";
 import { CarClass, CAR_CLASSES } from "@/lib/types";
@@ -20,7 +20,7 @@ export interface Car {
   createdAt: string;
 }
 
-interface FormData {
+interface CarFormData {
   make: string;
   model: string;
   year: string;
@@ -28,9 +28,10 @@ interface FormData {
   weightKg: string;
   class: CarClass;
   modifications: string;
+  photoUrl: string;
 }
 
-const emptyForm: FormData = {
+const emptyForm: CarFormData = {
   make: "",
   model: "",
   year: new Date().getFullYear().toString(),
@@ -38,9 +39,10 @@ const emptyForm: FormData = {
   weightKg: "",
   class: "Street",
   modifications: "",
+  photoUrl: "",
 };
 
-function carToForm(car: Car): FormData {
+function carToForm(car: Car): CarFormData {
   return {
     make: car.make,
     model: car.model,
@@ -49,6 +51,7 @@ function carToForm(car: Car): FormData {
     weightKg: car.weightKg?.toString() ?? "",
     class: car.class,
     modifications: car.modifications ?? "",
+    photoUrl: car.photoUrl ?? "",
   };
 }
 
@@ -60,10 +63,11 @@ type ModalState =
 export default function GarageClient({ initialCars }: { initialCars: Car[] }) {
   const [carList, setCarList] = useState<Car[]>(initialCars);
   const [modal, setModal] = useState<ModalState>({ open: false });
-  const [form, setForm] = useState<FormData>(emptyForm);
+  const [form, setForm] = useState<CarFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   function openAdd() {
     setForm(emptyForm);
@@ -81,6 +85,22 @@ export default function GarageClient({ initialCars }: { initialCars: Car[] }) {
     setModal({ open: false });
   }
 
+  async function handlePhotoUpload(file: File) {
+    setUploadingPhoto(true);
+    setFormError(null);
+    try {
+      const fd = new window.FormData();
+      fd.append("file", file);
+      fd.append("folder", "cars");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setFormError(data.error ?? "Upload failed"); return; }
+      setForm((prev) => ({ ...prev, photoUrl: data.url }));
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }
+
   async function handleSave() {
     if (!modal.open) return;
     setSaving(true);
@@ -94,6 +114,7 @@ export default function GarageClient({ initialCars }: { initialCars: Car[] }) {
       powerHp: form.powerHp ? parseInt(form.powerHp) : null,
       weightKg: form.weightKg ? parseInt(form.weightKg) : null,
       modifications: form.modifications.trim() || null,
+      photoUrl: form.photoUrl || null,
     };
 
     try {
@@ -174,7 +195,9 @@ export default function GarageClient({ initialCars }: { initialCars: Car[] }) {
           onChange={setForm}
           onSave={handleSave}
           onClose={closeModal}
+          onPhotoUpload={handlePhotoUpload}
           saving={saving}
+          uploadingPhoto={uploadingPhoto}
           error={formError}
         />
       )}
@@ -201,53 +224,65 @@ function CarCard({
   deleting: boolean;
 }) {
   return (
-    <div className="bg-card rounded-lg p-5 border border-card flex flex-col gap-4">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="font-bold text-lg leading-tight truncate">
-            {car.year} {car.make} {car.model}
-          </p>
-          <span
-            className={`text-xs font-semibold px-2 py-0.5 rounded-full mt-1.5 inline-block border ${classBadge[car.class]}`}
-          >
-            {car.class}
-          </span>
+    <div className="bg-card rounded-lg border border-card flex flex-col overflow-hidden">
+      {car.photoUrl ? (
+        <img
+          src={car.photoUrl}
+          alt={`${car.year} ${car.make} ${car.model}`}
+          className="w-full h-40 object-cover"
+        />
+      ) : (
+        <div className="w-full h-40 bg-carbon flex items-center justify-center">
+          <span className="text-4xl opacity-30">🏎</span>
         </div>
-        <div className="flex gap-1 shrink-0 mt-0.5">
-          <button
-            onClick={onEdit}
-            className="text-muted hover:text-off-white transition-colors p-1.5 rounded hover:bg-off-white/5"
-            title="Edit"
-          >
-            <EditIcon />
-          </button>
-          <button
-            onClick={onDelete}
-            disabled={deleting}
-            className="text-muted hover:text-red transition-colors p-1.5 rounded hover:bg-red/5 disabled:opacity-40"
-            title="Delete"
-          >
-            <TrashIcon />
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <p className="text-xs text-muted uppercase tracking-widest mb-0.5">Power</p>
-          <p className="font-semibold text-sm">{car.powerHp != null ? `${car.powerHp} hp` : "—"}</p>
-        </div>
-        <div>
-          <p className="text-xs text-muted uppercase tracking-widest mb-0.5">Weight</p>
-          <p className="font-semibold text-sm">{car.weightKg != null ? `${car.weightKg} kg` : "—"}</p>
-        </div>
-      </div>
-
-      {car.modifications && (
-        <p className="text-xs text-muted border-t border-card pt-3 leading-relaxed line-clamp-2">
-          {car.modifications}
-        </p>
       )}
+
+      <div className="p-5 flex flex-col gap-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="font-bold text-lg leading-tight truncate">
+              {car.year} {car.make} {car.model}
+            </p>
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full mt-1.5 inline-block border ${classBadge[car.class]}`}>
+              {car.class}
+            </span>
+          </div>
+          <div className="flex gap-1 shrink-0 mt-0.5">
+            <button
+              onClick={onEdit}
+              className="text-muted hover:text-off-white transition-colors p-1.5 rounded hover:bg-off-white/5"
+              title="Edit"
+            >
+              <EditIcon />
+            </button>
+            <button
+              onClick={onDelete}
+              disabled={deleting}
+              className="text-muted hover:text-red transition-colors p-1.5 rounded hover:bg-red/5 disabled:opacity-40"
+              title="Delete"
+            >
+              <TrashIcon />
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <p className="text-xs text-muted uppercase tracking-widest mb-0.5">Power</p>
+            <p className="font-semibold text-sm">{car.powerHp != null ? `${car.powerHp} hp` : "—"}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted uppercase tracking-widest mb-0.5">Weight</p>
+            <p className="font-semibold text-sm">{car.weightKg != null ? `${car.weightKg} kg` : "—"}</p>
+          </div>
+        </div>
+
+        {car.modifications && (
+          <p className="text-xs text-muted border-t border-card pt-3 leading-relaxed line-clamp-2">
+            {car.modifications}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -258,30 +293,79 @@ function CarModal({
   onChange,
   onSave,
   onClose,
+  onPhotoUpload,
   saving,
+  uploadingPhoto,
   error,
 }: {
   mode: "add" | "edit";
-  form: FormData;
-  onChange: (f: FormData) => void;
+  form: CarFormData;
+  onChange: (f: CarFormData) => void;
   onSave: () => void;
   onClose: () => void;
+  onPhotoUpload: (file: File) => void;
   saving: boolean;
+  uploadingPhoto: boolean;
   error: string | null;
 }) {
-  function set(key: keyof FormData, value: string) {
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  function set(key: keyof CarFormData, value: string) {
     onChange({ ...form, [key]: value });
   }
 
-  const canSave = form.make.trim() && form.model.trim() && form.year && !saving;
+  const canSave = !!(form.make.trim() && form.model.trim() && form.year && !saving && !uploadingPhoto);
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-surface rounded-xl w-full max-w-md p-6 flex flex-col gap-5 border border-card">
+      <div className="bg-surface rounded-xl w-full max-w-md p-6 flex flex-col gap-5 border border-card max-h-[90vh] overflow-y-auto">
         <h2 className="text-xl font-bold">{mode === "add" ? "Add Car" : "Edit Car"}</h2>
+
+        {/* Photo upload */}
+        <div
+          onClick={() => fileRef.current?.click()}
+          className="relative w-full h-36 rounded-lg border border-dashed border-card bg-carbon overflow-hidden cursor-pointer hover:border-red/40 transition-colors group"
+        >
+          {form.photoUrl ? (
+            <>
+              <img src={form.photoUrl} alt="Car photo" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <p className="text-xs font-semibold text-off-white">Change photo</p>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full gap-1.5">
+              {uploadingPhoto ? (
+                <p className="text-xs text-muted">Uploading…</p>
+              ) : (
+                <>
+                  <p className="text-2xl opacity-30">📷</p>
+                  <p className="text-xs text-muted">Click to upload a photo</p>
+                  <p className="text-xs text-muted/60">JPEG, PNG, WebP · max 5 MB</p>
+                </>
+              )}
+            </div>
+          )}
+          {uploadingPhoto && (
+            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+              <p className="text-xs text-off-white">Uploading…</p>
+            </div>
+          )}
+        </div>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) onPhotoUpload(file);
+            e.target.value = "";
+          }}
+        />
 
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3">
@@ -362,10 +446,7 @@ function CarModal({
         {error && <p className="text-sm text-red">{error}</p>}
 
         <div className="flex gap-3 justify-end pt-1">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm text-muted hover:text-off-white transition-colors"
-          >
+          <button onClick={onClose} className="px-4 py-2 text-sm text-muted hover:text-off-white transition-colors">
             Cancel
           </button>
           <button
@@ -373,12 +454,10 @@ function CarModal({
             disabled={!canSave}
             className="bg-red text-off-white text-sm font-semibold px-5 py-2 rounded-lg hover:opacity-80 transition-opacity disabled:opacity-40"
           >
-            {saving ? "Saving..." : "Save"}
+            {saving ? "Saving…" : "Save"}
           </button>
         </div>
       </div>
     </div>
   );
 }
-
-

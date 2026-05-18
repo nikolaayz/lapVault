@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { Field } from "@/components/ui/Field";
 import { inputClass } from "@/lib/ui";
 import { formatDate } from "@/lib/formatters";
@@ -115,6 +115,7 @@ export default function AdminClient({
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [deletingTrackId, setDeletingTrackId] = useState<number | null>(null);
   const [updatingRegId, setUpdatingRegId] = useState<number | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
 
@@ -154,6 +155,22 @@ export default function AdminClient({
   function closeTrackModal() {
     setTrackModal({ open: false });
     setFormError(null);
+  }
+
+  async function handleTrackPhotoUpload(file: File) {
+    setUploadingPhoto(true);
+    setFormError(null);
+    try {
+      const fd = new window.FormData();
+      fd.append("file", file);
+      fd.append("folder", "tracks");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setFormError(data.error ?? "Upload failed"); return; }
+      setTrackForm((prev) => ({ ...prev, photoUrl: data.url }));
+    } finally {
+      setUploadingPhoto(false);
+    }
   }
 
   async function handleSaveTrack() {
@@ -325,7 +342,9 @@ export default function AdminClient({
           onChange={setTrackForm}
           onSave={handleSaveTrack}
           onClose={closeTrackModal}
+          onPhotoUpload={handleTrackPhotoUpload}
           saving={saving}
+          uploadingPhoto={uploadingPhoto}
           error={formError}
         />
       )}
@@ -529,7 +548,9 @@ function TrackModalDialog({
   onChange,
   onSave,
   onClose,
+  onPhotoUpload,
   saving,
+  uploadingPhoto,
   error,
 }: {
   mode: "create" | "edit";
@@ -537,14 +558,18 @@ function TrackModalDialog({
   onChange: (f: TrackForm) => void;
   onSave: () => void;
   onClose: () => void;
+  onPhotoUpload: (file: File) => void;
   saving: boolean;
+  uploadingPhoto: boolean;
   error: string | null;
 }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+
   function set(key: keyof TrackForm, value: string) {
     onChange({ ...form, [key]: value });
   }
 
-  const canSave = !!(form.name.trim() && form.country.trim() && !saving);
+  const canSave = !!(form.name.trim() && form.country.trim() && !saving && !uploadingPhoto);
 
   return (
     <div
@@ -553,6 +578,43 @@ function TrackModalDialog({
     >
       <div className="bg-surface rounded-xl w-full max-w-lg p-6 flex flex-col gap-5 border border-card max-h-[90vh] overflow-y-auto">
         <h2 className="text-xl font-bold">{mode === "create" ? "Add Track" : "Edit Track"}</h2>
+
+        {/* Photo upload */}
+        <div
+          onClick={() => fileRef.current?.click()}
+          className="relative w-full h-36 rounded-lg border border-dashed border-card bg-carbon overflow-hidden cursor-pointer hover:border-red/40 transition-colors group"
+        >
+          {form.photoUrl ? (
+            <>
+              <img src={form.photoUrl} alt="Track photo" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <p className="text-xs font-semibold text-off-white">Change photo</p>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full gap-1.5">
+              <p className="text-2xl opacity-30">🏁</p>
+              <p className="text-xs text-muted">Click to upload a photo</p>
+              <p className="text-xs text-muted/60">JPEG, PNG, WebP · max 5 MB</p>
+            </div>
+          )}
+          {uploadingPhoto && (
+            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+              <p className="text-xs text-off-white">Uploading…</p>
+            </div>
+          )}
+        </div>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) onPhotoUpload(file);
+            e.target.value = "";
+          }}
+        />
 
         <div className="flex flex-col gap-4">
           <Field label="Name" required>
@@ -586,14 +648,6 @@ function TrackModalDialog({
               placeholder="Classic circuit known for..."
               rows={3}
               className={`${inputClass} resize-none`}
-            />
-          </Field>
-          <Field label="Photo URL">
-            <input
-              value={form.photoUrl}
-              onChange={(e) => set("photoUrl", e.target.value)}
-              placeholder="https://..."
-              className={inputClass}
             />
           </Field>
         </div>
