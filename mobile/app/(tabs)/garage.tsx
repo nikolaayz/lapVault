@@ -12,7 +12,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { apiFetch } from "@/lib/api";
+import * as ImagePicker from "expo-image-picker";
+import { apiFetch, apiUpload } from "@/lib/api";
 import { C } from "@/constants/colors";
 import { emptyCarForm, carToForm, type Car, type GarageFormState } from "@/lib/garageUtils";
 import { CarCard } from "@/components/garage/CarCard";
@@ -28,6 +29,7 @@ export default function GarageScreen() {
   const [editingCar, setEditingCar] = useState<Car | null>(null);
   const [form, setForm] = useState<GarageFormState>(emptyCarForm);
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [formError, setFormError] = useState("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
@@ -67,6 +69,36 @@ export default function GarageScreen() {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+  async function handlePickPhoto() {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission needed", "Allow access to your photos to add a car photo.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images",
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
+    if (result.canceled || !result.assets[0]) return;
+    const asset = result.assets[0];
+
+    setUploadingPhoto(true);
+    setFormError("");
+    try {
+      const form = new FormData();
+      form.append("file", { uri: asset.uri, type: asset.mimeType ?? "image/jpeg", name: asset.fileName ?? "car.jpg" } as any);
+      form.append("folder", "cars");
+      const res = await apiUpload("/api/upload", form);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setFormError(data.error ?? "Upload failed"); return; }
+      set("photoUrl", data.url);
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }
+
   async function handleSave() {
     if (!form.make.trim() || !form.model.trim() || !form.year) {
       setFormError("Make, model, and year are required.");
@@ -89,6 +121,7 @@ export default function GarageScreen() {
       powerHp: form.powerHp ? parseInt(form.powerHp) : null,
       weightKg: form.weightKg ? parseInt(form.weightKg) : null,
       modifications: form.modifications.trim() || null,
+      photoUrl: form.photoUrl || null,
     };
 
     try {
@@ -188,10 +221,12 @@ export default function GarageScreen() {
         mode={modalMode}
         form={form}
         saving={saving}
+        uploadingPhoto={uploadingPhoto}
         error={formError}
         onSet={set}
         onSave={handleSave}
         onClose={() => setModalVisible(false)}
+        onPickPhoto={handlePickPhoto}
       />
     </SafeAreaView>
   );

@@ -3,6 +3,7 @@ import {
   View,
   Text,
   Pressable,
+  Image,
   Modal,
   TextInput,
   ScrollView,
@@ -19,15 +20,17 @@ import type { GarageFormState } from "@/lib/garageUtils";
 
 const pressedStyle = { opacity: 0.75 } as const;
 
-export function CarModal({ visible, mode, form, saving, error, onSet, onSave, onClose }: {
+export function CarModal({ visible, mode, form, saving, uploadingPhoto, error, onSet, onSave, onClose, onPickPhoto }: {
   visible: boolean;
   mode: "add" | "edit";
   form: GarageFormState;
   saving: boolean;
+  uploadingPhoto: boolean;
   error: string;
   onSet: <K extends keyof GarageFormState>(key: K, value: GarageFormState[K]) => void;
   onSave: () => void;
   onClose: () => void;
+  onPickPhoto: () => void;
 }) {
   const insets = useSafeAreaInsets();
   const modelRef = useRef<TextInputType>(null);
@@ -43,6 +46,31 @@ export function CarModal({ visible, mode, form, saving, error, onSet, onSave, on
           <View style={m.handle} />
           <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <Text style={m.title}>{mode === "add" ? "Add Car" : "Edit Car"}</Text>
+
+            {/* Photo picker */}
+            <Pressable onPress={onPickPhoto} disabled={uploadingPhoto} style={m.photoPicker}>
+              {form.photoUrl ? (
+                <>
+                  <Image source={{ uri: form.photoUrl }} style={m.photoPreview} resizeMode="cover" />
+                  <View style={m.photoOverlay}>
+                    {uploadingPhoto
+                      ? <ActivityIndicator color="#fff" size="small" />
+                      : <Text style={m.photoOverlayText}>Change photo</Text>
+                    }
+                  </View>
+                </>
+              ) : (
+                <View style={m.photoEmpty}>
+                  {uploadingPhoto
+                    ? <ActivityIndicator color={C.muted} size="small" />
+                    : <>
+                        <Text style={m.photoEmptyIcon}>📷</Text>
+                        <Text style={m.photoEmptyText}>Add photo</Text>
+                      </>
+                  }
+                </View>
+              )}
+            </Pressable>
 
             <View style={m.row}>
               <View style={m.flex1}>
@@ -168,6 +196,13 @@ export function CarModal({ visible, mode, form, saving, error, onSet, onSave, on
 
 const m = StyleSheet.create({
   overlay: { flex: 1, justifyContent: "flex-end" },
+  photoPicker: { width: "100%", height: 140, borderRadius: 10, overflow: "hidden", marginBottom: 16, borderWidth: 1, borderColor: C.border, borderStyle: "dashed" },
+  photoPreview: { width: "100%", height: "100%" },
+  photoOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.45)", alignItems: "center", justifyContent: "center" },
+  photoOverlayText: { fontSize: 13, fontWeight: "700", color: "#fff" },
+  photoEmpty: { flex: 1, alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: C.bg },
+  photoEmptyIcon: { fontSize: 28, opacity: 0.4 },
+  photoEmptyText: { fontSize: 12, color: C.muted },
   backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.6)" },
   sheet: { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 20, paddingTop: 12, maxHeight: "90%", borderTopWidth: 1, borderColor: C.border },
   handle: { width: 36, height: 4, backgroundColor: C.border, borderRadius: 2, alignSelf: "center", marginBottom: 20 },

@@ -9,6 +9,7 @@ export interface Car {
   weightKg: number | null;
   class: CarClass;
   modifications: string | null;
+  photoUrl: string | null;
 }
 
 export interface GarageFormState {
@@ -19,6 +20,7 @@ export interface GarageFormState {
   weightKg: string;
   class: CarClass;
   modifications: string;
+  photoUrl: string;
 }
 
 export const emptyCarForm: GarageFormState = {
@@ -29,6 +31,7 @@ export const emptyCarForm: GarageFormState = {
   weightKg: "",
   class: "Street",
   modifications: "",
+  photoUrl: "",
 };
 
 export function carToForm(car: Car): GarageFormState {
@@ -40,5 +43,6 @@ export function carToForm(car: Car): GarageFormState {
     weightKg: car.weightKg?.toString() ?? "",
     class: car.class,
     modifications: car.modifications ?? "",
+    photoUrl: car.photoUrl ?? "",
   };
 }

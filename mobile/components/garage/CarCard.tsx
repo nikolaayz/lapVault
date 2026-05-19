@@ -1,4 +1,4 @@
-import { View, Text, Pressable, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, Pressable, Image, StyleSheet, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { C } from "@/constants/colors";
 import { classBadge } from "@/lib/types";
@@ -13,6 +13,14 @@ export function CarCard({ car, onEdit, onDelete, deleting }: {
   const badge = classBadge[car.class];
   return (
     <View style={cs.card}>
+      {car.photoUrl ? (
+        <Image source={{ uri: car.photoUrl }} style={cs.photo} resizeMode="cover" />
+      ) : (
+        <View style={cs.photoPlaceholder}>
+          <Text style={cs.photoPlaceholderIcon}>🏎</Text>
+        </View>
+      )}
+      <View style={cs.body}>
       <View style={cs.cardTop}>
         <View style={cs.cardMain}>
           <Text style={cs.carName} numberOfLines={1}>
@@ -54,12 +62,17 @@ export function CarCard({ car, onEdit, onDelete, deleting }: {
       {car.modifications ? (
         <Text style={cs.mods} numberOfLines={2}>{car.modifications}</Text>
       ) : null}
+      </View>
     </View>
   );
 }
 
 const cs = StyleSheet.create({
-  card: { marginHorizontal: 20, marginBottom: 12, backgroundColor: C.card, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: C.border },
+  card: { marginHorizontal: 20, marginBottom: 12, backgroundColor: C.card, borderRadius: 12, overflow: "hidden", borderWidth: 1, borderColor: C.border },
+  photo: { width: "100%", height: 160 },
+  photoPlaceholder: { width: "100%", height: 120, backgroundColor: C.bg, alignItems: "center", justifyContent: "center" },
+  photoPlaceholderIcon: { fontSize: 36, opacity: 0.3 },
+  body: { padding: 16 },
   cardTop: { flexDirection: "row", alignItems: "flex-start", marginBottom: 14 },
   cardMain: { flex: 1, gap: 8 },
   carName: { fontSize: 16, fontWeight: "bold", color: C.offWhite, paddingRight: 8 },

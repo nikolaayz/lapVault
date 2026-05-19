@@ -12,3 +12,14 @@ export async function apiFetch(path: string, options: RequestInit = {}): Promise
     },
   });
 }
+
+export async function apiUpload(path: string, formData: FormData): Promise<Response> {
+  const token = await getToken();
+  return fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    body: formData,
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+}

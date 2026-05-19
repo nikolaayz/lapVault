@@ -5,6 +5,7 @@ import {
   ScrollView,
   TextInput,
   Pressable,
+  Image,
   StyleSheet,
   ActivityIndicator,
   Alert,
@@ -15,13 +16,16 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
-import { apiFetch } from "@/lib/api";
+import * as ImagePicker from "expo-image-picker";
+import { apiFetch, apiUpload } from "@/lib/api";
 import { deleteToken } from "@/lib/auth";
 import { C } from "@/constants/colors";
 
 export default function ProfileScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [accountSaving, setAccountSaving] = useState(false);
@@ -46,12 +50,53 @@ export default function ProfileScreen() {
       const data = await res.json();
       setName(data.name);
       setEmail(data.email);
+      setAvatarUrl(data.avatarUrl ?? null);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useFocusEffect(useCallback(() => { void loadProfile(); }, [loadProfile]));
+
+  async function handlePickAvatar() {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission needed", "Allow access to your photos to set a profile picture.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images",
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (result.canceled || !result.assets[0]) return;
+    const asset = result.assets[0];
+
+    setUploadingAvatar(true);
+    setAccountError("");
+    try {
+      const form = new FormData();
+      form.append("file", { uri: asset.uri, type: asset.mimeType ?? "image/jpeg", name: asset.fileName ?? "photo.jpg" } as any);
+      form.append("folder", "profiles");
+      const uploadRes = await apiUpload("/api/upload", form);
+      const uploadData = await uploadRes.json().catch(() => ({}));
+      if (!uploadRes.ok) { setAccountError(uploadData.error ?? "Upload failed"); return; }
+
+      const newUrl: string = uploadData.url;
+      const saveRes = await apiFetch("/api/profile", {
+        method: "PUT",
+        body: JSON.stringify({ name, email, avatarUrl: newUrl }),
+      });
+      const saveData = await saveRes.json().catch(() => ({}));
+      if (!saveRes.ok) { setAccountError(saveData.error ?? "Failed to save avatar"); return; }
+      setAvatarUrl(newUrl);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
 
   async function handleSaveAccount() {
     if (!name.trim()) { setAccountError("Name is required."); return; }
@@ -63,7 +108,7 @@ export default function ProfileScreen() {
     try {
       const res = await apiFetch("/api/profile", {
         method: "PUT",
-        body: JSON.stringify({ name: name.trim(), email: email.trim() }),
+        body: JSON.stringify({ name: name.trim(), email: email.trim(), avatarUrl }),
       });
       const data = await res.json();
       if (!res.ok) { setAccountError(data.error ?? "Failed to save changes."); return; }
@@ -141,9 +186,24 @@ export default function ProfileScreen() {
 
           {/* Avatar */}
           <View style={s.avatarWrap}>
-            <View style={s.avatar}>
-              <Text style={s.avatarText}>{initials}</Text>
-            </View>
+            <Pressable onPress={handlePickAvatar} disabled={uploadingAvatar} style={s.avatarPressable}>
+              {avatarUrl ? (
+                <Image source={{ uri: avatarUrl }} style={s.avatarImg} />
+              ) : (
+                <View style={s.avatar}>
+                  <Text style={s.avatarText}>{initials}</Text>
+                </View>
+              )}
+              <View style={s.avatarOverlay}>
+                {uploadingAvatar
+                  ? <ActivityIndicator color={C.offWhite} size="small" />
+                  : <Text style={s.avatarOverlayText}>Edit</Text>
+                }
+              </View>
+            </Pressable>
+            <Pressable onPress={handlePickAvatar} disabled={uploadingAvatar}>
+              <Text style={s.changePhotoText}>{uploadingAvatar ? "Uploading…" : "Change photo"}</Text>
+            </Pressable>
             <Text style={s.avatarName}>{name}</Text>
             <Text style={s.avatarEmail}>{email}</Text>
           </View>
@@ -271,12 +331,21 @@ const s = StyleSheet.create({
   title: { fontSize: 26, fontWeight: "bold", color: C.offWhite },
 
   avatarWrap: { alignItems: "center", paddingVertical: 28 },
+  avatarPressable: { width: 80, height: 80, borderRadius: 40, marginBottom: 8 },
   avatar: {
-    width: 72, height: 72, borderRadius: 36,
+    width: 80, height: 80, borderRadius: 40,
     backgroundColor: C.card, borderWidth: 2, borderColor: C.red,
-    alignItems: "center", justifyContent: "center", marginBottom: 12,
+    alignItems: "center", justifyContent: "center",
   },
+  avatarImg: { width: 80, height: 80, borderRadius: 40 },
+  avatarOverlay: {
+    position: "absolute", inset: 0, borderRadius: 40,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    alignItems: "center", justifyContent: "center",
+  },
+  avatarOverlayText: { fontSize: 12, fontWeight: "700", color: "#fff" },
   avatarText: { fontSize: 26, fontWeight: "bold", color: C.red },
+  changePhotoText: { fontSize: 12, color: C.red, marginBottom: 10 },
   avatarName: { fontSize: 18, fontWeight: "bold", color: C.offWhite, marginBottom: 4 },
   avatarEmail: { fontSize: 13, color: C.muted },
 
