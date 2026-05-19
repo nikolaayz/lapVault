@@ -69,7 +69,7 @@ export default function LeaderboardClient({ tracks }: { tracks: Track[] }) {
     <div className="flex flex-col gap-8">
       <div>
         <p className="text-xs font-semibold tracking-widest uppercase text-red mb-1">Track Records</p>
-        <h1 className="text-3xl font-bold">Leaderboard</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">Leaderboard</h1>
       </div>
 
       {tracks.length === 0 ? (

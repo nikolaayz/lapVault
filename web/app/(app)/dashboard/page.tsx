@@ -114,7 +114,7 @@ export default async function DashboardPage() {
     <div className="flex flex-col gap-10">
       <div>
         <p className="text-xs font-semibold tracking-widest uppercase text-red mb-1">Dashboard</p>
-        <h1 className="text-3xl font-bold">Welcome back, {userName}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">Welcome back, {userName}</h1>
       </div>
 
       {/* Stats */}

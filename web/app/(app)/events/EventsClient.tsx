@@ -187,7 +187,7 @@ export default function EventsClient({
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-semibold tracking-widest uppercase text-red mb-1">Track Days</p>
-          <h1 className="text-3xl font-bold">Events</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Events</h1>
         </div>
         {isAdmin && (
           <button onClick={openCreate} className="bg-red text-off-white text-sm font-semibold px-4 py-2 rounded-lg hover:opacity-80 transition-opacity">

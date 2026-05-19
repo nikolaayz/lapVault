@@ -158,7 +158,7 @@ export default function GarageClient({ initialCars }: { initialCars: Car[] }) {
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-semibold tracking-widest uppercase text-red mb-1">Garage</p>
-          <h1 className="text-3xl font-bold">My Cars</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">My Cars</h1>
         </div>
         <button
           onClick={openAdd}

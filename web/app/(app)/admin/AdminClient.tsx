@@ -267,7 +267,7 @@ export default function AdminClient({
     <div className="flex flex-col gap-8">
       <div>
         <p className="text-xs font-semibold tracking-widest uppercase text-red mb-1">Admin</p>
-        <h1 className="text-3xl font-bold">Control Panel</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">Control Panel</h1>
       </div>
 
       <div className="flex border-b border-card gap-6">

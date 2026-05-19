@@ -113,7 +113,7 @@ export default function ProfileClient({
     <div className="flex flex-col gap-8">
       <div>
         <p className="text-xs font-semibold tracking-widest uppercase text-red mb-1">Account</p>
-        <h1 className="text-3xl font-bold">Profile</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">Profile</h1>
       </div>
 
       {/* Avatar */}

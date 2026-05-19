@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import LogoutButton from "./LogoutButton";
+import MobileNav from "./MobileNav";
 
 async function getUser() {
   const cookieStore = await cookies();
@@ -29,12 +30,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen bg-carbon flex flex-col">
       <header className="sticky top-0 z-50 bg-surface border-b border-card">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between relative">
           <Link href="/" className="text-xl font-bold tracking-tight">
             <span className="text-red">LAP</span>
             <span className="text-off-white">VAULT</span>
           </Link>
-          <nav className="flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-6">
             <Link href="/dashboard" className="text-sm text-muted hover:text-off-white transition-colors">Dashboard</Link>
             <Link href="/garage" className="text-sm text-muted hover:text-off-white transition-colors">Garage</Link>
             <Link href="/laps" className="text-sm text-muted hover:text-off-white transition-colors">Laps</Link>
@@ -55,9 +56,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               </div>
             )}
           </nav>
+          <MobileNav isAdmin={user?.role === "admin"} user={user ? { name: user.name } : null} />
         </div>
       </header>
-      <main className="flex-1 max-w-6xl mx-auto w-full px-6 py-10">
+      <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-10">
         {children}
       </main>
     </div>

@@ -137,7 +137,7 @@ export default function LapsClient({
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-semibold tracking-widest uppercase text-red mb-1">Lap Times</p>
-          <h1 className="text-3xl font-bold">My Laps</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">My Laps</h1>
         </div>
         {cars.length > 0 && (
           <button
