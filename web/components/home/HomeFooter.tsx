@@ -10,7 +10,6 @@ export default function HomeFooter({ loggedIn }: { loggedIn: boolean }) {
           {" "}— Track day data platform
         </span>
         <div className="flex gap-6">
-          <Link href="/tracks" className="hover:text-off-white transition-colors">Tracks</Link>
           {loggedIn ? (
             <Link href="/dashboard" className="hover:text-off-white transition-colors">Dashboard</Link>
           ) : (
