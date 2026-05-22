@@ -393,5 +393,5 @@ All Drizzle commands run from the `web/` directory:
 
 | Email | Password | Role |
 |---|---|---|
-| `alex@example.com` | `password123` | User |
-| `admin@lapvault.com` | `admin123` | Admin |
+| `test@lapvault.app` | `password123` | Admin |
+| `john@lapvault.app` | `password123` | User |
