@@ -46,23 +46,33 @@ export default function LeaderboardClient({ tracks }: { tracks: Track[] }) {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
 
-  useEffect(() => {
+  function handleTrackChange(value: string) {
+    setSelectedTrackId(value);
     setPage(1);
-  }, [selectedTrackId, selectedClass]);
+  }
+
+  function handleClassChange(cls: CarClass | "") {
+    setSelectedClass(cls);
+    setPage(1);
+  }
 
   useEffect(() => {
     if (!selectedTrackId) return;
-    setLoading(true);
-    const params = new URLSearchParams({ trackId: selectedTrackId, page: String(page), limit: String(PAGE_SIZE) });
-    if (selectedClass) params.set("class", selectedClass);
-    fetch(`/api/leaderboard?${params}`)
-      .then((r) => r.json())
-      .then((data) => {
+    async function fetchLeaderboard() {
+      setLoading(true);
+      const params = new URLSearchParams({ trackId: selectedTrackId, page: String(page), limit: String(PAGE_SIZE) });
+      if (selectedClass) params.set("class", selectedClass);
+      try {
+        const r = await fetch(`/api/leaderboard?${params}`);
+        const data = await r.json();
         setEntries(Array.isArray(data.data) ? data.data : []);
         setTotal(data.total ?? 0);
         setTotalPages(data.totalPages ?? 1);
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchLeaderboard();
   }, [selectedTrackId, selectedClass, page]);
 
   return (
@@ -82,7 +92,7 @@ export default function LeaderboardClient({ tracks }: { tracks: Track[] }) {
           <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
             <select
               value={selectedTrackId}
-              onChange={(e) => setSelectedTrackId(e.target.value)}
+              onChange={(e) => handleTrackChange(e.target.value)}
               className="bg-surface border border-card rounded-lg px-3 py-2 text-sm text-off-white focus:outline-none focus:border-red/50 w-full sm:w-72"
             >
               {tracks.map((t) => (
@@ -94,7 +104,7 @@ export default function LeaderboardClient({ tracks }: { tracks: Track[] }) {
 
             <div className="flex flex-wrap gap-2">
               <button
-                onClick={() => setSelectedClass("")}
+                onClick={() => handleClassChange("")}
                 className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
                   selectedClass === ""
                     ? "text-red border-red bg-red/10"
@@ -106,7 +116,7 @@ export default function LeaderboardClient({ tracks }: { tracks: Track[] }) {
               {CAR_CLASSES.map((cls) => (
                 <button
                   key={cls}
-                  onClick={() => setSelectedClass(cls)}
+                  onClick={() => handleClassChange(cls)}
                   className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
                     selectedClass === cls ? classBadge[cls] : "text-muted border-card hover:border-off-white/30"
                   }`}
