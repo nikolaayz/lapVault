@@ -37,6 +37,17 @@ Car classes keep competition fair. Each car is tagged as one of:
 
 ---
 
+## Features
+
+- **Lap logging** — record lap times with full sector splits, track conditions, and car details
+- **Garage management** — store multiple cars with specs, class, and photos
+- **Event registration** — browse and sign up for circuit events filtered by car class
+- **Leaderboards** — class-separated rankings per track updated in real time
+- **Cross-platform** — identical feature set on web (Next.js) and mobile (Expo / React Native)
+- **Admin panel** — manage tracks, events, and user roles from the web app
+
+---
+
 ## Architecture
 
 ### Overview
