@@ -4,8 +4,10 @@
 name: Node.js CI
 
 on:
-  branch_protection_rule:
-    types: [created]
+  pull_request:
+    branches:
+      - 'feat*'
+      - 'feat/**'
 
 jobs:
   build:
@@ -30,7 +32,7 @@ jobs:
   lint:
     needs: 'build'
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
     - name: Run lint
