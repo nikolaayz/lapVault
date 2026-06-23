@@ -43,6 +43,9 @@ jobs:
 
     - run: npm run build --if-present
       working-directory: web
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
   lint:
     needs: 'build'
