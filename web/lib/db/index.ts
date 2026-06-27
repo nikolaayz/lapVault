@@ -16,6 +16,6 @@ function getDb(): Db {
 // Proxy defers neon() initialization to first use (request time, not build time)
 export const db = new Proxy({} as Db, {
   get(_, prop: string | symbol) {
-    return (getDb() as any)[prop];
+    return (getDb() as Record<string | symbol, unknown>)[prop];
   },
 });
