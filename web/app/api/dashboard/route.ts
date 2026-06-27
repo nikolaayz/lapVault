@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { users, laps, cars, tracks, events, eventRegistrations } from "@/lib/db/schema";
