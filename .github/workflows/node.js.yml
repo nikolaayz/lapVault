@@ -90,7 +90,8 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      - run: npx netlify-cli deploy --prod --dir=.next
+      - run: npm install -g netlify-cli
+      - run: netlify deploy --prod --dir=.next
         working-directory: web
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
