@@ -6,7 +6,10 @@ function CountUp({ target, suffix, active }: { target: number; suffix: string; a
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    if (!active) { setCount(0); return; }
+    if (!active) {
+      const id = requestAnimationFrame(() => setCount(0));
+      return () => cancelAnimationFrame(id);
+    }
     const duration = 2000;
     const start = performance.now();
     function tick(now: number) {
